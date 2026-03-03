@@ -1,0 +1,71 @@
+export interface TrelloConfig {
+  key: string;
+  token: string;
+  boardId: string;
+  listName: string;
+  tmdbApiKey: string;
+}
+
+export interface TrelloListEntry {
+  id: string;
+  name: string;
+}
+
+export interface TrelloCard {
+  id: string;
+  name: string;
+  desc: string;
+  shortUrl: string;
+  labels: TrelloLabel[];
+  dueComplete: boolean;
+}
+
+export interface TrelloLabel {
+  id: string;
+  name: string;
+};
+
+export interface TMDBMovie {
+  adult: boolean;
+  backdrop_path: string;
+  genre_ids: number[];
+  id: string;
+  original_language: string;
+  original_title: string;
+  overview: string;
+  popularity: number;
+  poster_path: string;
+  release_date: string;
+  title: string;
+  video: boolean;
+  vote_average: number;
+  vote_count: number;
+}
+
+export interface Movie {
+  trello: {
+    id: string;
+    title: string;
+    desc: string;
+    url: string;
+    labels: string[];
+    completed: boolean;
+  },
+  tmdb: {
+    title: string;
+    original_title: string;
+    formato?: string;
+    overview: string;
+    poster_path: string;
+    backdrop_path: string;
+    vote_average: number;
+    release_date: string;
+  },
+}
+
+export interface Filter {
+  quality: string;
+  title: string;
+  showCompleted: boolean | null;
+  showBroken: boolean;
+}
