@@ -40,6 +40,13 @@ export interface TMDBMovie {
   video: boolean;
   vote_average: number;
   vote_count: number;
+  runtime: string;
+}
+
+export interface TMDBMovieDetails {
+  runtime: string;
+  director: string;
+  cast: string[];
 }
 
 export interface Movie {
@@ -62,6 +69,9 @@ export interface Movie {
     vote_average: number;
     release_date: string;
     videoKey: string;
+    runtime: string;
+    director: string;
+    cast: string[];
   },
 }
 
