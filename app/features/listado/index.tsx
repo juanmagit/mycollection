@@ -3,29 +3,8 @@ import { TMDB_IMAGE_BASE, POSTER_SIZE } from "../../config";
 import { useEffect, useState } from "react";
 import FilterComponent from "../filter";
 import { normalizeText } from "../../utils";
-
-const Badge = ({ children }: { children: string }) => {
-  const label = children.toLowerCase();
-  const is4K = label.includes('4k');
-  const isFullHD = label.includes('fullhd');
-  
-  let badgeClasses = "relative inline-block px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all duration-300 ";
-
-  if (is4K) {
-    badgeClasses += "bg-gradient-to-b from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-950/30 border border-amber-300/50";
-  } else if (isFullHD) {
-    badgeClasses += "bg-gradient-to-b from-sky-500 to-sky-700 text-white shadow-lg shadow-sky-950/40 border border-sky-400/50";
-  } else {
-    badgeClasses += "bg-slate-700 text-slate-200 border border-slate-600/50";
-  }
-
-  return (
-    <span className={badgeClasses}>
-      <span className="absolute inset-0 bg-white/10 rounded opacity-0 hover:opacity-100 transition-opacity pointer-events-none"></span>
-      {children}
-    </span>
-  );
-};
+import MovieDetails from "./details";
+import Badge from "./badge";
 
 export default function MoviesList({
   movies,
@@ -157,76 +136,10 @@ export default function MoviesList({
 
           {/* modal */}
           {selectedMovie && (
-            <div
-              onClick={() => setSelectedMovie(null)}
-              className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
-            >
-              <div 
-                className="bg-slate-900 w-full max-w-lg rounded-t-2xl sm:rounded-2xl overflow-hidden border-t sm:border border-slate-800 shadow-2xl animate-in slide-in-from-bottom duration-300 cursor-default"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* background image (Backdrop) */}
-                <div className="relative h-48 sm:h-64">
-                  <img 
-                    src={selectedMovie.tmdb.backdrop_path ? `${TMDB_IMAGE_BASE}w780${selectedMovie.tmdb.backdrop_path}` : `${TMDB_IMAGE_BASE}${POSTER_SIZE}${selectedMovie.tmdb.poster_path}`} 
-                    className="w-full h-full object-cover opacity-60"
-                  />
-                  <button 
-                    onClick={() => setSelectedMovie(null)}
-                    className="absolute top-4 right-4 bg-black/50 hover:bg-black/80 text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h2 className="text-xl font-bold text-white">{selectedMovie.tmdb.title}</h2>
-                      <div className="flex items-center gap-3 mt-1">
-                        <p className="text-sky-400 text-sm font-medium">
-                          {selectedMovie.tmdb.release_date?.split('-')[0]}
-                        </p>
-                        <div className="flex gap-1.5">
-                          {selectedMovie.trello.labels?.map((label: any, index: number) => (
-                            <Badge key={index}>{label}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-                      <span className="text-yellow-400 font-bold">⭐ {selectedMovie.tmdb.vote_average?.toFixed(1)}</span>
-                    </div>
-                  </div>
-
-                  {selectedMovie.trello.desc && (
-                    <p className="text-slate-400 text-xl leading-relaxed mb-6 max-h-48 overflow-y-auto">
-                      {selectedMovie.trello.desc}
-                    </p>
-                  )}
-
-                  <p className="text-slate-300 text-sm leading-relaxed mb-6 max-h-48 overflow-y-auto">
-                    {selectedMovie.tmdb.overview}
-                  </p>
-
-                  <div className="flex gap-3">
-                    <a 
-                      href={selectedMovie.trello.url} 
-                      target="_blank" 
-                      className="flex-1 bg-sky-600 hover:bg-sky-500 text-white text-center py-3 rounded-xl font-bold transition-all shadow-lg shadow-sky-900/20"
-                    >
-                      Abrir en Trello
-                    </a>
-                    <button 
-                      onClick={() => setSelectedMovie(null)}
-                      className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-bold transition-all"
-                    >
-                      Cerrar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <MovieDetails
+              selectedMovie={selectedMovie}
+              onClose={() => setSelectedMovie(null)}
+            />
           )}
         </>
   );

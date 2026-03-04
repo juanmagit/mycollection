@@ -14,3 +14,13 @@ export const getMovieData = async (config: TrelloConfig, title: string, year?: s
     return data.results[0];
   }
 };
+
+export const getTrailerKey = async (config: TrelloConfig, id: string): Promise<string> => {
+  const res = await fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${config.tmdbApiKey}`)
+  const data = await res.json();
+
+  const trailer = data.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube");
+  if (trailer) {
+    return trailer.key;
+  }
+}
