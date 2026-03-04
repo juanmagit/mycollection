@@ -26,10 +26,10 @@ export interface TrelloLabel {
 };
 
 export interface TMDBMovie {
+  id: string;
   adult: boolean;
   backdrop_path: string;
   genre_ids: number[];
-  id: string;
   original_language: string;
   original_title: string;
   overview: string;
@@ -40,6 +40,13 @@ export interface TMDBMovie {
   video: boolean;
   vote_average: number;
   vote_count: number;
+  runtime: string;
+}
+
+export interface TMDBMovieDetails {
+  runtime: string;
+  director: string;
+  cast: string[];
 }
 
 export interface Movie {
@@ -52,6 +59,7 @@ export interface Movie {
     completed: boolean;
   },
   tmdb: {
+    id: string;
     title: string;
     original_title: string;
     formato?: string;
@@ -60,6 +68,10 @@ export interface Movie {
     backdrop_path: string;
     vote_average: number;
     release_date: string;
+    videoKey: string;
+    runtime: string;
+    director: string;
+    cast: string[];
   },
 }
 
