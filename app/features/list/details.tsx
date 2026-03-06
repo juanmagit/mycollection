@@ -65,7 +65,7 @@ export default function MovieDetails({
               <h3 className="text-base font-normal">{selectedMovie.tmdb.original_title}</h3>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
                 <p className="text-sky-400 text-sm font-bold">
-                  {selectedMovie.tmdb.release_date?.split('-')[0]}
+                  {selectedMovie.tmdb.release_date?.year}
                 </p>
                 <span className="text-slate-600 text-xs">•</span>
                 <p className="text-slate-300 text-sm">

@@ -78,7 +78,7 @@ export default function MoviesList({
                     
                     <div className="flex items-center gap-2 mb-2">
                       <p className="text-[9px] text-sky-400 font-semibold">
-                        {movie.tmdb.release_date?.split('-')[0]}
+                        {movie.tmdb.release_date?.year}
                       </p>
                       <span className={`text-[8px] font-black uppercase tracking-tighter ${isCompleted ? 'text-emerald-400' : 'text-slate-500'}`}>
                         • {isCompleted ? 'Completada' : 'Pendiente'}

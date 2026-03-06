@@ -66,16 +66,16 @@ export const sortMovies = (movies: Movie[], sort: SortOption): Movie[] => {
 
     case SortOption.YEAR_ASC:
       sortedMovies.sort((a, b) => {
-        const yearA = a.tmdb.release_date?.split('-')[0] || "";
-        const yearB = b.tmdb.release_date?.split('-')[0] || "";
+        const yearA = a.tmdb.release_date?.year || "";
+        const yearB = b.tmdb.release_date?.year || "";
         return parseInt(yearA) - parseInt(yearB);
       });
       break;
 
     case SortOption.YEAR_DESC:
       sortedMovies.sort((a, b) => {
-        const yearA = a.tmdb.release_date?.split('-')[0] || "";
-        const yearB = b.tmdb.release_date?.split('-')[0] || "";
+        const yearA = a.tmdb.release_date?.year || "";
+        const yearB = b.tmdb.release_date?.year || "";
         return parseInt(yearB) - parseInt(yearA);
       });
       break;
