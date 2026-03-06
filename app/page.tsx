@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { TrelloConfig, Movie } from './types/types';
 import Configuration from './features/config';
-import MoviesList from './features/listado';
+import MoviesList from './features/list';
 
 export default function ColeccionPelis() {
   const [activeSection, setActiveSection] = useState<'listado' | 'config'>('listado');

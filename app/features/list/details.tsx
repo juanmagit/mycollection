@@ -62,6 +62,7 @@ export default function MovieDetails({
           <div className="flex justify-between items-start">
             <div className="flex-1 pr-4">
               <h2 className="text-2xl font-bold text-white leading-tight">{selectedMovie.tmdb.title}</h2>
+              <h3 className="text-base font-normal">{selectedMovie.tmdb.original_title}</h3>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
                 <p className="text-sky-400 text-sm font-bold">
                   {selectedMovie.tmdb.release_date?.split('-')[0]}
@@ -84,7 +85,7 @@ export default function MovieDetails({
         </div>
 
         {/* cast, director and overview */}
-        <div className="p-6 overflow-y-auto flex-grow">
+        <div className="px-6 py-0 overflow-y-auto flex-grow">
           
           {/* details */}
           <div className="grid grid-cols-1 gap-4 text-sm border-b border-slate-800/50 pb-3">
