@@ -65,7 +65,7 @@ export default function MovieDetails({
               <h3 className="text-base font-normal">{selectedMovie.tmdb.original_title}</h3>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
                 <p className="text-sky-400 text-sm font-bold">
-                  {selectedMovie.tmdb.release_date?.split('-')[0]}
+                  {selectedMovie.tmdb.release_date?.year}
                 </p>
                 <span className="text-slate-600 text-xs">•</span>
                 <p className="text-slate-300 text-sm">
@@ -87,6 +87,14 @@ export default function MovieDetails({
         {/* cast, director and overview */}
         <div className="px-6 py-0 overflow-y-auto flex-grow">
           
+          {selectedMovie.trello.desc && (
+            <div className="my-2 bg-sky-500/5 border-l-2 border-sky-500 p-2 rounded-r-xl">
+              <p className="text-slate-300 text-sm leading-relaxed italic">
+                "{selectedMovie.trello.desc}"
+              </p>
+            </div>
+          )}
+
           {/* details */}
           <div className="grid grid-cols-1 gap-4 text-sm border-b border-slate-800/50 pb-3">
             {selectedMovie.tmdb.director && (
@@ -105,13 +113,6 @@ export default function MovieDetails({
             )}
           </div>
 
-          {selectedMovie.trello.desc && (
-            <div className="bg-sky-500/5 border-l-2 border-sky-500 p-4 rounded-r-xl">
-              <p className="text-slate-300 text-sm leading-relaxed italic">
-                "{selectedMovie.trello.desc}"
-              </p>
-            </div>
-          )}
 
           <div className="space-y-2">
             <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Sinopsis</span>

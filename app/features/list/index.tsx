@@ -2,9 +2,10 @@ import { Filter, Movie } from "../../types/types";
 import { TMDB_IMAGE_BASE, POSTER_SIZE } from "../../config";
 import { useEffect, useState } from "react";
 import FilterComponent from "../filter";
-import { normalizeText } from "../../utils";
 import MovieDetails from "./details";
 import Badge from "./badge";
+import SortComponent, { SortOption } from "../sort";
+import { filterMovies, sortMovies } from "../../utils";
 
 export default function MoviesList({
   movies,
@@ -14,43 +15,14 @@ export default function MoviesList({
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [filter, setFilter] = useState<Filter>(null);
+  const [sort, setSort] = useState<SortOption>(SortOption.TITLE_ASC);
 
   useEffect(() => {
-    const peliculasFiltradas = movies.filter(movie => {
-      if (!filter) return true;
+    const filteredMovies = filterMovies(movies, filter);
+    const sortedMovies = sortMovies(filteredMovies, sort);
+    setFilteredMovies(sortedMovies);
+  }, [movies, filter, sort]);
 
-      if (filter.showBroken) {
-        return !movie.tmdb.title;
-      }
-
-      let completedMatch = true;
-      if (filter.showCompleted === true) {
-        completedMatch = movie.trello.completed === true;
-      }
-
-      let notCompletedMatch = true;
-      if (filter.showCompleted === false) {
-        notCompletedMatch = movie.trello.completed === false;
-      }
-
-      let qualityMatch = true;
-      if (filter.quality) {
-        qualityMatch = movie.trello.labels?.some(tag => 
-          tag.toLowerCase().includes(filter.quality?.toLowerCase())
-        );
-      }
-
-      let titleMatch = true;
-      if (filter.title) {
-        titleMatch = normalizeText(movie.tmdb.title)?.includes(normalizeText(filter.title)) ||
-          normalizeText(movie.tmdb.original_title)?.includes(normalizeText(filter.title));
-      }
-
-      return qualityMatch && titleMatch && completedMatch && notCompletedMatch;
-    });
-    setFilteredMovies(peliculasFiltradas);
-  }, [movies, filter]);
-  
   return (
         <>
           <div className="flex justify-between items-center">
@@ -106,7 +78,7 @@ export default function MoviesList({
                     
                     <div className="flex items-center gap-2 mb-2">
                       <p className="text-[9px] text-sky-400 font-semibold">
-                        {movie.tmdb.release_date?.split('-')[0]}
+                        {movie.tmdb.release_date?.year}
                       </p>
                       <span className={`text-[8px] font-black uppercase tracking-tighter ${isCompleted ? 'text-emerald-400' : 'text-slate-500'}`}>
                         • {isCompleted ? 'Completada' : 'Pendiente'}
@@ -133,6 +105,7 @@ export default function MoviesList({
           </div>
 
           <FilterComponent onChange={setFilter} />
+          <SortComponent onChange={setSort} currentSort={sort} />
 
           {/* modal */}
           {selectedMovie && (

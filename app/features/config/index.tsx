@@ -15,6 +15,16 @@ const parseTrelloName = (trelloName: string) => {
   return { trelloTitle, trelloYear };
 };
 
+const tmdbStringDateToMovieDate = (date: string): Movie['tmdb']['release_date'] => {
+  const [year, month, day] = (date ?? '').split('-');
+  return {
+    year: year ?? '',
+    month: month ?? '',
+    day: day ?? '',
+  }
+};
+
+
 export default function Configuration({
   config,
   setConfig,
@@ -66,7 +76,7 @@ export default function Configuration({
             overview: movieData.overview,
             popularity: movieData.popularity,
             poster_path: movieData.poster_path,
-            release_date: movieData.release_date,
+            release_date: tmdbStringDateToMovieDate(movieData.release_date),
             title: movieData.title,
             video: movieData.video,
             vote_average: movieData.vote_average,
