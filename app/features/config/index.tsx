@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Movie, TMDBMovie, TrelloConfig } from "../../types/types";
+import { Movie, TMDBMovie, ApiConfig } from "../../types/types";
 import { getCards, getListData } from "../../api/trello";
 import { getGenres, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
 
@@ -24,14 +24,13 @@ const tmdbStringDateToMovieDate = (date: string): Movie['tmdb']['release_date'] 
   }
 };
 
-
 export default function Configuration({
   config,
   setConfig,
   setMovies,
 }: {
-  config: TrelloConfig,
-  setConfig: (config: TrelloConfig) => void,
+  config: ApiConfig,
+  setConfig: (config: ApiConfig) => void,
   setMovies: (movies: Movie[]) => void,
 }) {
   const [loading, setLoading] = useState(false);
@@ -45,11 +44,11 @@ export default function Configuration({
 
   // trello import
   const importTrello = async () => {
-    if (!config.key || !config.token || !config.boardId) return alert("Faltan datos de Trello");
+    if (!config.trelloKey || !config.trelloToken || !config.trelloBoardId) return alert("Faltan datos de Trello");
     
     setLoading(true);
     try {
-      const list = await getListData(config, config.listName);
+      const list = await getListData(config, config.trelloListName);
       const trelloCards = await getCards(config, list);
       const genres = await getGenres(config);
       
@@ -107,32 +106,38 @@ export default function Configuration({
         <div className="space-y-4">
           <input 
             placeholder="Trello API Key" 
-            value={config.key} 
-            onChange={e => setConfig({...config, key: e.target.value})}
+            value={config.trelloKey} 
+            onChange={e => setConfig({...config, trelloKey: e.target.value})}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="Trello Token" 
-            value={config.token} 
-            onChange={e => setConfig({...config, token: e.target.value})}
+            value={config.trelloToken} 
+            onChange={e => setConfig({...config, trelloToken: e.target.value})}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="ID del Tablero de Trello" 
-            value={config.boardId} 
-            onChange={e => setConfig({...config, boardId: e.target.value})}
+            value={config.trelloBoardId} 
+            onChange={e => setConfig({...config, trelloBoardId: e.target.value})}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="Nombre de la Lista (ej: Películas)" 
-            value={config.listName} 
-            onChange={e => setConfig({...config, listName: e.target.value})}
+            value={config.trelloListName} 
+            onChange={e => setConfig({...config, trelloListName: e.target.value})}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="TMDB API Key (v3 auth)" 
             value={config.tmdbApiKey} 
             onChange={e => setConfig({...config, tmdbApiKey: e.target.value})}
+            className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
+          />
+          <input 
+            placeholder="TMDB API language" 
+            value={config.tmdbLanguage}
+            onChange={e => setConfig({...config, tmdbLanguage: e.target.value})}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
         </div>

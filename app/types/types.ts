@@ -1,9 +1,10 @@
-export interface TrelloConfig {
-  key: string;
-  token: string;
-  boardId: string;
-  listName: string;
+export interface ApiConfig {
+  trelloKey: string;
+  trelloToken: string;
+  trelloBoardId: string;
+  trelloListName: string;
   tmdbApiKey: string;
+  tmdbLanguage: string;
 }
 
 export interface TrelloListEntry {
