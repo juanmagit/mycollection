@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Movie, TMDBMovie, TrelloConfig } from "../../types/types";
 import { getCards, getListData } from "../../api/trello";
-import { getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
+import { getGenres, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
 
 const parseTrelloName = (trelloName: string) => {
   // search for anything inside [] at the end of the string
@@ -51,6 +51,7 @@ export default function Configuration({
     try {
       const list = await getListData(config, config.listName);
       const trelloCards = await getCards(config, list);
+      const genres = await getGenres(config);
       
       const newMovies: Movie[] = await Promise.all(trelloCards.map(async trelloCard => {
         const { trelloTitle, trelloYear } = parseTrelloName(trelloCard.name);
@@ -70,7 +71,7 @@ export default function Configuration({
             id: movieData.id,
             adult: movieData.adult,
             backdrop_path: movieData.backdrop_path,
-            genre_ids: movieData.genre_ids,
+            genres: movieData.genre_ids.map(id => genres[id]),
             original_language: movieData.original_language,
             original_title: movieData.original_title,
             overview: movieData.overview,

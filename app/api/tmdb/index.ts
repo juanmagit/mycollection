@@ -1,6 +1,16 @@
 import { TMDBMovie, TMDBMovieDetails, TrelloConfig } from "../../types/types";
 import { FetchQueue } from "../queue";
 
+export const getGenres = async (config: TrelloConfig): Promise<Record<number, string>> => {
+  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${config.tmdbApiKey}&language=es-ES`);
+  const data = await res.json();
+
+  return data.genres.reduce((acc, genre) => {
+    acc[genre.id] = genre.name;
+    return acc;
+  }, {});
+};
+
 export const getMovieData = async (config: TrelloConfig, title: string, year?: string): Promise<TMDBMovie> => {
   const res = await FetchQueue.getInstance().fetch(
     `https://api.themoviedb.org/3/search/movie?api_key=${config.tmdbApiKey}&query=${encodeURIComponent(title)}&language=es-ES`

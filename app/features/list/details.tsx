@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Movie } from "../../types/types";
-import Badge from "./badge";
+import Badge, { BadgeType } from "./badge";
 
 export default function MovieDetails({
   selectedMovie,
@@ -72,8 +72,8 @@ export default function MovieDetails({
                   {selectedMovie.tmdb.runtime} min
                 </p>
                 <div className="flex gap-1.5">
-                  {selectedMovie.trello.labels?.map((label: any, index: number) => (
-                    <Badge key={index}>{label}</Badge>
+                  {selectedMovie.trello.labels?.map((label: string, index: number) => (
+                    <Badge key={index} type={label as BadgeType}>{label}</Badge>
                   ))}
                 </div>
               </div>
@@ -81,6 +81,11 @@ export default function MovieDetails({
             <div className="bg-slate-800 px-3 py-1 rounded-xl border border-slate-700 flex flex-col items-center min-w-[50px]">
               <span className="text-yellow-400 font-bold text-lg">⭐ {selectedMovie.tmdb.vote_average?.toFixed(1)}</span>
             </div>
+          </div>
+          <div className="pt-2 flex gap-1 items-start">
+            {selectedMovie.tmdb.genres?.map((genre: string, index: number) => (
+              <Badge key={index} type={BadgeType.Genre}>{genre}</Badge>
+            ))}
           </div>
         </div>
 

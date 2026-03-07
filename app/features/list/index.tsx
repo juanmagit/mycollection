@@ -3,7 +3,7 @@ import { TMDB_IMAGE_BASE, POSTER_SIZE } from "../../config";
 import { useEffect, useState } from "react";
 import FilterComponent from "../filter";
 import MovieDetails from "./details";
-import Badge from "./badge";
+import Badge, { BadgeType } from "./badge";
 import SortComponent, { SortOption } from "../sort";
 import { filterMovies, sortMovies } from "../../utils";
 
@@ -65,7 +65,7 @@ export default function MoviesList({
                   {/* labels */}
                   <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10">
                     {movie.trello.labels?.map(tag => (
-                      <Badge key={tag}>{tag}</Badge>
+                      <Badge key={tag} type={tag as BadgeType}>{tag}</Badge>
                     ))}
                   </div>
 
