@@ -40,7 +40,28 @@ export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
         normalizeText(movie.tmdb.original_title)?.includes(normalizeText(filter.title));
     }
 
-    return qualityMatch && titleMatch && completedMatch && notCompletedMatch;
+    let genreMatch = true;
+    if (filter.genre) {
+      const normalizedGenre = normalizeText(filter.genre);
+      genreMatch = movie.tmdb.genres?.some(genre => 
+        normalizeText(genre).includes(normalizedGenre)
+      );
+    }
+
+    let directorMatch = true;
+    if (filter.director) {
+      directorMatch = normalizeText(movie.tmdb.director)?.includes(normalizeText(filter.director));
+    }
+
+    let actorMatch = true;
+    if (filter.actor) {
+      const normalizedActor = normalizeText(filter.actor);
+      actorMatch = movie.tmdb.cast?.some(actor => 
+        normalizeText(actor)?.includes(normalizedActor)
+      );
+    }
+
+    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch;
   });
 };
 

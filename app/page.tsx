@@ -1,13 +1,15 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { TrelloConfig, Movie } from './types/types';
+import { ApiConfig, Movie } from './types/types';
 import Configuration from './features/config';
 import MoviesList from './features/list';
+import { MoviesSummary } from './utils/movies-summary';
 
-export default function ColeccionPelis() {
-  const [activeSection, setActiveSection] = useState<'listado' | 'config'>('listado');
+export default function MoviesCollection() {
+  const [activeSection, setActiveSection] = useState<'moviesList' | 'config'>('moviesList');
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [config, setConfig] = useState<TrelloConfig>({ key: '', token: '', boardId: '', listName: '', tmdbApiKey: ''});
+  const [config, setConfig] = useState<ApiConfig>({ trelloKey: '', trelloToken: '', trelloBoardId: '', trelloListName: '', tmdbApiKey: '', tmdbLanguage: '' });
+  const [moviesSummary, setMoviesSummary] = useState<MoviesSummary>(new MoviesSummary());
 
   // data load
   useEffect(() => {
@@ -17,13 +19,19 @@ export default function ColeccionPelis() {
     if (localConfig) setConfig(JSON.parse(localConfig));
   }, []);
 
+  useEffect(() => {
+    if (movies) {
+      setMoviesSummary(new MoviesSummary(movies));
+    }
+  }, [movies]);
+
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <nav className="flex gap-4 border-b border-slate-800 mb-8">
         <button
-          onClick={() => setActiveSection('listado')}
+          onClick={() => setActiveSection('moviesList')}
           className={`pb-2 px-4 font-medium transition-all ${
-            activeSection === 'listado' 
+            activeSection === 'moviesList' 
             ? 'border-b-2 border-sky-500 text-sky-500' 
             : 'text-slate-500 hover:text-slate-300'
           }`}
@@ -52,9 +60,10 @@ export default function ColeccionPelis() {
       )}
 
       {/* movies list */}
-      {activeSection === 'listado' && (
+      {activeSection === 'moviesList' && (
         <MoviesList 
           movies={movies}
+          moviesSummary={moviesSummary}
         />
       )}
     </main>

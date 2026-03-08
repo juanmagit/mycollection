@@ -1,8 +1,8 @@
-import { TMDBMovie, TMDBMovieDetails, TrelloConfig } from "../../types/types";
+import { TMDBMovie, TMDBMovieDetails, ApiConfig } from "../../types/types";
 import { FetchQueue } from "../queue";
 
-export const getGenres = async (config: TrelloConfig): Promise<Record<number, string>> => {
-  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${config.tmdbApiKey}&language=es-ES`);
+export const getGenres = async (config: ApiConfig): Promise<Record<number, string>> => {
+  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${config.tmdbApiKey}&language=${config.tmdbLanguage}`);
   const data = await res.json();
 
   return data.genres.reduce((acc, genre) => {
@@ -11,9 +11,9 @@ export const getGenres = async (config: TrelloConfig): Promise<Record<number, st
   }, {});
 };
 
-export const getMovieData = async (config: TrelloConfig, title: string, year?: string): Promise<TMDBMovie> => {
+export const getMovieData = async (config: ApiConfig, title: string, year?: string): Promise<TMDBMovie> => {
   const res = await FetchQueue.getInstance().fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${config.tmdbApiKey}&query=${encodeURIComponent(title)}&language=es-ES`
+    `https://api.themoviedb.org/3/search/movie?api_key=${config.tmdbApiKey}&query=${encodeURIComponent(title)}&language=${config.tmdbLanguage}`
   );
   const data = await res.json();
 
@@ -26,7 +26,7 @@ export const getMovieData = async (config: TrelloConfig, title: string, year?: s
   }
 };
 
-export const getMovieDetails = async (config: TrelloConfig, id: string): Promise<TMDBMovieDetails> => {
+export const getMovieDetails = async (config: ApiConfig, id: string): Promise<TMDBMovieDetails> => {
   const res = await FetchQueue.getInstance().fetch(
     `https://api.themoviedb.org/3/movie/${id}?api_key=${config.tmdbApiKey}&append_to_response=credits`
   );
@@ -39,7 +39,7 @@ export const getMovieDetails = async (config: TrelloConfig, id: string): Promise
   };
 };
 
-export const getTrailerKey = async (config: TrelloConfig, id: string): Promise<string> => {
+export const getTrailerKey = async (config: ApiConfig, id: string): Promise<string> => {
   const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${config.tmdbApiKey}`)
   const data = await res.json();
 
