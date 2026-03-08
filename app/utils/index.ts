@@ -48,7 +48,12 @@ export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
       );
     }
 
-    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch;
+    let directorMatch = true;
+    if (filter.director) {
+      directorMatch = normalizeText(movie.tmdb.director)?.includes(normalizeText(filter.director));
+    }
+
+    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch;
   });
 };
 

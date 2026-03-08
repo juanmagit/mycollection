@@ -3,12 +3,13 @@ import { useState, useEffect } from 'react';
 import { ApiConfig, Movie } from './types/types';
 import Configuration from './features/config';
 import MoviesList from './features/list';
+import { MoviesSummary } from './utils/movies-summary';
 
 export default function MoviesCollection() {
   const [activeSection, setActiveSection] = useState<'moviesList' | 'config'>('moviesList');
   const [movies, setMovies] = useState<Movie[]>([]);
   const [config, setConfig] = useState<ApiConfig>({ trelloKey: '', trelloToken: '', trelloBoardId: '', trelloListName: '', tmdbApiKey: '', tmdbLanguage: '' });
-  const [genres, setGenres] = useState<string[]>([]);
+  const [moviesSummary, setMoviesSummary] = useState<MoviesSummary>(new MoviesSummary());
 
   // data load
   useEffect(() => {
@@ -20,14 +21,7 @@ export default function MoviesCollection() {
 
   useEffect(() => {
     if (movies) {
-      const genres = movies.reduce((acc, movie) => {
-        movie.tmdb.genres.forEach(genre => {
-          acc.add(genre);
-        });
-        return acc;
-      }, new Set<string>());
-
-      setGenres(Array.from(genres));
+      setMoviesSummary(new MoviesSummary(movies));
     }
   }, [movies]);
 
@@ -68,8 +62,8 @@ export default function MoviesCollection() {
       {/* movies list */}
       {activeSection === 'moviesList' && (
         <MoviesList 
-          genres={genres}
           movies={movies}
+          moviesSummary={moviesSummary}
         />
       )}
     </main>

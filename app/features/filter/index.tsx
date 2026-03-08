@@ -4,9 +4,11 @@ import AutocompleteSelector from "../autocomplete";
 
 export default function FilterComponent({
   genres,
+  directors,
   onChange,
 }: {
   genres: string[],
+  directors: string[],
   onChange: (filter: Filter) => void,
 }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -15,6 +17,7 @@ export default function FilterComponent({
   const [showCompleted, setShowCompleted] = useState(null);
   const [showBroken, setShowBroken] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState<string>(null);
+  const [selectedDirector, setSelectedDirector] = useState<string>(null);
 
   useEffect(() => {
     onChange({
@@ -23,8 +26,9 @@ export default function FilterComponent({
       showCompleted: showCompleted,
       showBroken: showBroken,
       genre: selectedGenre,
+      director: selectedDirector,
     });
-  }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, onChange]);
+  }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, selectedDirector, onChange]);
 
   return (
     <>
@@ -32,13 +36,15 @@ export default function FilterComponent({
       <div className="fixed bottom-6 right-3 z-40 flex flex-col gap-3">
         
         {/* clean filter button */}
-        {(qualityFilter || searchTitle || showCompleted !== null || showBroken) && (
+        {(qualityFilter || searchTitle || showCompleted !== null || showBroken || selectedGenre || selectedDirector) && (
           <button
             onClick={() => {
               setQualityFilter(null);
               setSearchTitle("");
               setShowCompleted(null);
               setShowBroken(false);
+              setSelectedGenre(null);
+              setSelectedDirector(null);
             }}
             className="bg-rose-600 hover:bg-rose-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-4 border-slate-950 animate-in zoom-in duration-200"
             title="Limpiar filtros"
@@ -53,7 +59,7 @@ export default function FilterComponent({
           className="bg-sky-600 hover:bg-sky-500 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-4 border-slate-950 relative"
         >
           <span className="text-xl">🔍</span>
-          {(qualityFilter || searchTitle || showCompleted !== null || showBroken) && (
+          {(qualityFilter || searchTitle || showCompleted !== null || showBroken || selectedGenre || selectedDirector) && (
             <span className="absolute -top-1 -right-1 bg-amber-500 w-5 h-5 rounded-full text-[10px] flex items-center justify-center border-2 border-slate-950 font-bold">!</span>
           )}
         </button>
@@ -97,6 +103,15 @@ export default function FilterComponent({
                 placeholder="Ej: Ciencia Ficción..."
                 selectedValue={selectedGenre}
                 onSelect={(genre) => setSelectedGenre(genre as string)}
+              />
+
+              {/* director section */}
+              <AutocompleteSelector
+                label="Director"
+                options={directors.map(director => ({ id: director, label: director }))}
+                placeholder="Ej: Quentin Tarantino..."
+                selectedValue={selectedDirector}
+                onSelect={(director) => setSelectedDirector(director as string)}
               />
 
               {/* quality section */}
@@ -179,7 +194,7 @@ export default function FilterComponent({
               </div>
 
               <button
-                onClick={() => { setIsFilterOpen(false); setQualityFilter(null); setSearchTitle(""); setShowCompleted(null); setShowBroken(false); setSelectedGenre(null); }}
+                onClick={() => { setIsFilterOpen(false); setQualityFilter(null); setSearchTitle(""); setShowCompleted(null); setShowBroken(false); setSelectedGenre(null); setSelectedDirector(null); }}
                 className="w-full py-3 text-xs font-bold text-slate-500 hover:text-rose-400 transition-colors"
               >
                 Limpiar todo

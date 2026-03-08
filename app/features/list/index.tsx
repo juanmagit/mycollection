@@ -6,13 +6,14 @@ import MovieDetails from "./details";
 import Badge, { BadgeType } from "./badge";
 import SortComponent, { SortOption } from "../sort";
 import { filterMovies, sortMovies } from "../../utils";
+import { MoviesSummary } from "../../utils/movies-summary";
 
 export default function MoviesList({
-  genres,
   movies,
+  moviesSummary,
 }: {
-  genres: string[];
   movies: Movie[];
+  moviesSummary: MoviesSummary;
 }) {
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -106,8 +107,15 @@ export default function MoviesList({
             })}
           </div>
 
-          <FilterComponent genres={genres} onChange={setFilter} />
-          <SortComponent  currentSort={sort} onChange={setSort} />
+          <FilterComponent
+            genres={moviesSummary.getGenres()}
+            directors={moviesSummary.getDirectors()}
+            onChange={setFilter}
+          />
+          <SortComponent
+            currentSort={sort}
+            onChange={setSort}
+          />
 
           {/* modal */}
           {selectedMovie && (
