@@ -110,6 +110,7 @@ export default function MoviesList({
           <FilterComponent
             genres={moviesSummary.getGenres()}
             directors={moviesSummary.getDirectors()}
+            actors={moviesSummary.getActors()}
             onChange={setFilter}
           />
           <SortComponent

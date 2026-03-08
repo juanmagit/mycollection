@@ -53,7 +53,15 @@ export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
       directorMatch = normalizeText(movie.tmdb.director)?.includes(normalizeText(filter.director));
     }
 
-    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch;
+    let actorMatch = true;
+    if (filter.actor) {
+      const normalizedActor = normalizeText(filter.actor);
+      actorMatch = movie.tmdb.cast?.some(actor => 
+        normalizeText(actor)?.includes(normalizedActor)
+      );
+    }
+
+    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch;
   });
 };
 

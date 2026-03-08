@@ -88,4 +88,5 @@ export interface Filter {
   showBroken: boolean;
   genre: string;
   director: string;
+  actor: string;
 }
