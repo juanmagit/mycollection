@@ -22,6 +22,19 @@ export default function FilterComponent({
   const [selectedDirector, setSelectedDirector] = useState<string>(null);
   const [selectedActor, setSelectedActor] = useState<string>(null);
 
+  // blocks background scroll
+  useEffect(() => {
+    if (isFilterOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isFilterOpen]);
+
   useEffect(() => {
     onChange({
       quality: qualityFilter,
@@ -78,13 +91,13 @@ export default function FilterComponent({
       {isFilterOpen && (
         <div className="fixed inset-0 z-[110] flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFilterOpen(false)} />
-          <div className="relative w-72 bg-slate-900 h-full shadow-2xl border-l border-slate-800 p-6 animate-in slide-in-from-right duration-300">
+          <div className="relative w-72 bg-slate-900 h-full flex flex-col shadow-2xl border-l border-slate-800 p-6 animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-xl font-bold text-white">Filtros</h3>
               <button onClick={() => setIsFilterOpen(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-8 overflow-y-auto">
               {/* title search section */}
               <div>
                 <h4 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-widest">Buscar película</h4>
