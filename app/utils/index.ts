@@ -40,7 +40,15 @@ export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
         normalizeText(movie.tmdb.original_title)?.includes(normalizeText(filter.title));
     }
 
-    return qualityMatch && titleMatch && completedMatch && notCompletedMatch;
+    let genreMatch = true;
+    if (filter.genre) {
+      const normalizedGenre = normalizeText(filter.genre);
+      genreMatch = movie.tmdb.genres?.some(genre => 
+        normalizeText(genre).includes(normalizedGenre)
+      );
+    }
+
+    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch;
   });
 };
 

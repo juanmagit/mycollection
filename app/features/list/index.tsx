@@ -8,8 +8,10 @@ import SortComponent, { SortOption } from "../sort";
 import { filterMovies, sortMovies } from "../../utils";
 
 export default function MoviesList({
+  genres,
   movies,
 }: {
+  genres: string[];
   movies: Movie[];
 }) {
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
@@ -104,8 +106,8 @@ export default function MoviesList({
             })}
           </div>
 
-          <FilterComponent onChange={setFilter} />
-          <SortComponent onChange={setSort} currentSort={sort} />
+          <FilterComponent genres={genres} onChange={setFilter} />
+          <SortComponent  currentSort={sort} onChange={setSort} />
 
           {/* modal */}
           {selectedMovie && (

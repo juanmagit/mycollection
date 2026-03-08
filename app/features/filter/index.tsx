@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Filter } from '../../types/types';
+import AutocompleteSelector from "../autocomplete";
 
 export default function FilterComponent({
+  genres,
   onChange,
 }: {
+  genres: string[],
   onChange: (filter: Filter) => void,
 }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -11,6 +14,7 @@ export default function FilterComponent({
   const [searchTitle, setSearchTitle] = useState("");
   const [showCompleted, setShowCompleted] = useState(null);
   const [showBroken, setShowBroken] = useState(false);
+  const [selectedGenre, setSelectedGenre] = useState<string>(null);
 
   useEffect(() => {
     onChange({
@@ -18,8 +22,9 @@ export default function FilterComponent({
       title: searchTitle,
       showCompleted: showCompleted,
       showBroken: showBroken,
+      genre: selectedGenre,
     });
-  }, [qualityFilter, searchTitle, showCompleted, showBroken, onChange]);
+  }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, onChange]);
 
   return (
     <>
@@ -84,6 +89,15 @@ export default function FilterComponent({
                   )}
                 </div>
               </div>
+
+              {/* genre section */}
+              <AutocompleteSelector
+                label="Género"
+                options={genres.map(genre => ({ id: genre, label: genre }))}
+                placeholder="Ej: Ciencia Ficción..."
+                selectedValue={selectedGenre}
+                onSelect={(genre) => setSelectedGenre(genre as string)}
+              />
 
               {/* quality section */}
               <div>
@@ -165,7 +179,7 @@ export default function FilterComponent({
               </div>
 
               <button
-                onClick={() => { setIsFilterOpen(false); setQualityFilter(null); setSearchTitle(""); setShowCompleted(null); setShowBroken(false);}}
+                onClick={() => { setIsFilterOpen(false); setQualityFilter(null); setSearchTitle(""); setShowCompleted(null); setShowBroken(false); setSelectedGenre(null); }}
                 className="w-full py-3 text-xs font-bold text-slate-500 hover:text-rose-400 transition-colors"
               >
                 Limpiar todo

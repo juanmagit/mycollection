@@ -8,6 +8,7 @@ export default function MoviesCollection() {
   const [activeSection, setActiveSection] = useState<'moviesList' | 'config'>('moviesList');
   const [movies, setMovies] = useState<Movie[]>([]);
   const [config, setConfig] = useState<ApiConfig>({ trelloKey: '', trelloToken: '', trelloBoardId: '', trelloListName: '', tmdbApiKey: '', tmdbLanguage: '' });
+  const [genres, setGenres] = useState<string[]>([]);
 
   // data load
   useEffect(() => {
@@ -16,6 +17,19 @@ export default function MoviesCollection() {
     if (localMovies) setMovies(JSON.parse(localMovies));
     if (localConfig) setConfig(JSON.parse(localConfig));
   }, []);
+
+  useEffect(() => {
+    if (movies) {
+      const genres = movies.reduce((acc, movie) => {
+        movie.tmdb.genres.forEach(genre => {
+          acc.add(genre);
+        });
+        return acc;
+      }, new Set<string>());
+
+      setGenres(Array.from(genres));
+    }
+  }, [movies]);
 
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
@@ -54,6 +68,7 @@ export default function MoviesCollection() {
       {/* movies list */}
       {activeSection === 'moviesList' && (
         <MoviesList 
+          genres={genres}
           movies={movies}
         />
       )}

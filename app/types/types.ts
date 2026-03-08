@@ -86,4 +86,5 @@ export interface Filter {
   title: string;
   showCompleted: boolean | null;
   showBroken: boolean;
+  genre: string;
 }
