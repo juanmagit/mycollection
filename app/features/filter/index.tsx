@@ -34,7 +34,7 @@ export default function FilterComponent({
     });
   }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, selectedDirector, selectedActor, onChange]);
 
-  const clearSelection = useCallback(() => {
+  const resetFilter = useCallback(() => {
     setQualityFilter(null);
     setSearchTitle("");
     setShowCompleted(null);
@@ -53,7 +53,7 @@ export default function FilterComponent({
         {(qualityFilter || searchTitle || showCompleted !== null || showBroken || selectedGenre || selectedDirector || selectedActor) && (
           <button
             onClick={() => {
-              clearSelection();
+              resetFilter();
             }}
             className="bg-rose-600 hover:bg-rose-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-4 border-slate-950 animate-in zoom-in duration-200"
             title="Limpiar filtros"
@@ -214,7 +214,7 @@ export default function FilterComponent({
               <button
                 onClick={() => {
                   setIsFilterOpen(false);
-                  clearSelection();
+                  resetFilter();
                 }}
                 className="w-full py-3 text-xs font-bold text-slate-500 hover:text-rose-400 transition-colors"
               >
