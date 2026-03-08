@@ -15,6 +15,15 @@ export default function MovieDetails({
     if (!selectedMovie) setShowVideo(false);
   }, [selectedMovie]);
 
+  // blocks background scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   return (
     <div
       onClick={onClose}
@@ -90,7 +99,7 @@ export default function MovieDetails({
         </div>
 
         {/* cast, director and overview */}
-        <div className="px-6 py-0 overflow-y-auto flex-grow">
+        <div className="px-6 py-0 overflow-y-auto flex-grow overscroll-contain touch-auto">
           
           {selectedMovie.trello.desc && (
             <div className="my-2 bg-sky-500/5 border-l-2 border-sky-500 p-2 rounded-r-xl">
