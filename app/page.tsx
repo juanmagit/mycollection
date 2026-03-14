@@ -4,11 +4,12 @@ import { ApiConfig, Movie } from './types/types';
 import Configuration from './features/config';
 import MoviesList from './features/list';
 import { MoviesSummary } from './utils/movies-summary';
+import LoadingSkeleton from './features/skeleton';
 
 export default function MoviesCollection() {
   const [activeSection, setActiveSection] = useState<'moviesList' | 'config'>('moviesList');
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [config, setConfig] = useState<ApiConfig>({ trelloKey: '', trelloToken: '', trelloBoardId: '', trelloListName: '', tmdbApiKey: '', tmdbLanguage: '' });
+  const [config, setConfig] = useState<ApiConfig>(null);
   const [moviesSummary, setMoviesSummary] = useState<MoviesSummary>(new MoviesSummary());
 
   // data load
@@ -24,6 +25,10 @@ export default function MoviesCollection() {
       setMoviesSummary(new MoviesSummary(movies));
     }
   }, [movies]);
+
+  if (!config) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
@@ -62,6 +67,7 @@ export default function MoviesCollection() {
       {/* movies list */}
       {activeSection === 'moviesList' && (
         <MoviesList 
+          config={config}
           movies={movies}
           moviesSummary={moviesSummary}
         />
