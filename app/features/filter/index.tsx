@@ -36,15 +36,21 @@ export default function FilterComponent({
   }, [isFilterOpen]);
 
   useEffect(() => {
-    onChange({
-      quality: qualityFilter,
-      title: searchTitle?.trim(),
-      showCompleted: showCompleted,
-      showBroken: showBroken,
-      genre: selectedGenre?.trim(),
-      director: selectedDirector?.trim(),
-      actor: selectedActor?.trim(),
-    });
+    const handler = setTimeout(() => {
+      onChange({
+        quality: qualityFilter,
+        title: searchTitle?.trim(),
+        showCompleted: showCompleted,
+        showBroken: showBroken,
+        genre: selectedGenre?.trim(),
+        director: selectedDirector?.trim(),
+        actor: selectedActor?.trim(),
+      });
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, selectedDirector, selectedActor, onChange]);
 
   const resetFilter = useCallback(() => {
