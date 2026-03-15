@@ -16,7 +16,7 @@ export default function FilterComponent({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [qualityFilter, setQualityFilter] = useState<string | null>(null);
   const [searchTitle, setSearchTitle] = useState("");
-  const [showCompleted, setShowCompleted] = useState(null);
+  const [showCompleted, setShowCompleted] = useState<boolean>(null);
   const [showBroken, setShowBroken] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState<string>(null);
   const [selectedDirector, setSelectedDirector] = useState<string>(null);
@@ -38,12 +38,12 @@ export default function FilterComponent({
   useEffect(() => {
     onChange({
       quality: qualityFilter,
-      title: searchTitle,
+      title: searchTitle?.trim(),
       showCompleted: showCompleted,
       showBroken: showBroken,
-      genre: selectedGenre,
-      director: selectedDirector,
-      actor: selectedActor
+      genre: selectedGenre?.trim(),
+      director: selectedDirector?.trim(),
+      actor: selectedActor?.trim(),
     });
   }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, selectedDirector, selectedActor, onChange]);
 
