@@ -7,6 +7,7 @@ import Badge, { BadgeType } from "./badge";
 import SortComponent, { SortOption } from "../sort";
 import { filterMovies, sortMovies } from "../../utils";
 import { MoviesSummary } from "../../utils/movies-summary";
+import Suggestions from "../suggestions";
 
 export default function MoviesList({
   movies,
@@ -106,6 +107,11 @@ export default function MoviesList({
               );
             })}
           </div>
+
+          <Suggestions 
+            activeFilters={filter} 
+            movies={movies}
+          />
 
           <FilterComponent
             genres={moviesSummary.getGenres()}

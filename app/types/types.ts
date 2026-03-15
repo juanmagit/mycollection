@@ -50,6 +50,18 @@ export interface TMDBMovieDetails {
   cast: string[];
 }
 
+export interface TMDBPerson {
+  id: number;
+  adult: boolean;
+  gender: number;
+  known_for: TMDBMovie[];
+  known_for_department: string;
+  name: string;
+  original_name: string;
+  popularity: number;
+  profile_path: string;
+}
+
 export interface Movie {
   trello: {
     id: string;

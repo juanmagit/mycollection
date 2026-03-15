@@ -1,19 +1,26 @@
-import { TMDBMovie, TMDBMovieDetails, ApiConfig } from "../../types/types";
+import { ConfigStore } from "../../features/config/config-store";
+import { TMDBMovie, TMDBMovieDetails, TMDBPerson } from "../../types/types";
 import { FetchQueue } from "../queue";
 
-export const getGenres = async (config: ApiConfig): Promise<Record<number, string>> => {
-  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${config.tmdbApiKey}&language=${config.tmdbLanguage}`);
+export const getGenres = async (): Promise<{id: number, name: string}[]> => {
+  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&language=${ConfigStore.getInstance().getApiConfig().tmdbLanguage}`);
   const data = await res.json();
 
-  return data.genres.reduce((acc, genre) => {
+  return data.genres;
+}
+
+export const getGenresObject = async (): Promise<Record<number, string>> => {
+  const genres = await getGenres();
+
+  return genres.reduce((acc, genre) => {
     acc[genre.id] = genre.name;
     return acc;
   }, {});
 };
 
-export const getMovieData = async (config: ApiConfig, title: string, year?: string): Promise<TMDBMovie> => {
+export const getMovieData = async (title: string, year?: string): Promise<TMDBMovie> => {
   const res = await FetchQueue.getInstance().fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${config.tmdbApiKey}&query=${encodeURIComponent(title)}&language=${config.tmdbLanguage}`
+    `https://api.themoviedb.org/3/search/movie?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&query=${encodeURIComponent(title)}&language=${ConfigStore.getInstance().getApiConfig().tmdbLanguage}`
   );
   const data = await res.json();
 
@@ -26,9 +33,9 @@ export const getMovieData = async (config: ApiConfig, title: string, year?: stri
   }
 };
 
-export const getMovieDetails = async (config: ApiConfig, id: string): Promise<TMDBMovieDetails> => {
+export const getMovieDetails = async (id: string): Promise<TMDBMovieDetails> => {
   const res = await FetchQueue.getInstance().fetch(
-    `https://api.themoviedb.org/3/movie/${id}?api_key=${config.tmdbApiKey}&append_to_response=credits`
+    `https://api.themoviedb.org/3/movie/${id}?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&append_to_response=credits`
   );
   const data = await res.json();
 
@@ -39,8 +46,8 @@ export const getMovieDetails = async (config: ApiConfig, id: string): Promise<TM
   };
 };
 
-export const getTrailerKey = async (config: ApiConfig, id: string): Promise<string> => {
-  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${config.tmdbApiKey}`)
+export const getTrailerKey = async (id: string): Promise<string> => {
+  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}`)
   const data = await res.json();
 
   const trailer = data.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube");
@@ -48,3 +55,17 @@ export const getTrailerKey = async (config: ApiConfig, id: string): Promise<stri
     return trailer.key;
   }
 }
+
+export const getDiscoverMovies = async (extraQuery: string): Promise<TMDBMovie[]> => {
+  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&language=${ConfigStore.getInstance().getApiConfig().tmdbLanguage}&sort_by=popularity.desc&vote_count.gte=100${extraQuery}`);
+  const data = await res.json();
+
+  return data.results;
+}
+
+export const getPerson = async (actor: string, director: string): Promise<TMDBPerson[]> => {
+  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/search/person?query=${actor || director}&api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}`);
+  const data = await res.json();
+
+  return data.results;
+};

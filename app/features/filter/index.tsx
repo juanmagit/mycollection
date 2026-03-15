@@ -16,7 +16,7 @@ export default function FilterComponent({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [qualityFilter, setQualityFilter] = useState<string | null>(null);
   const [searchTitle, setSearchTitle] = useState("");
-  const [showCompleted, setShowCompleted] = useState(null);
+  const [showCompleted, setShowCompleted] = useState<boolean>(null);
   const [showBroken, setShowBroken] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState<string>(null);
   const [selectedDirector, setSelectedDirector] = useState<string>(null);
@@ -36,15 +36,21 @@ export default function FilterComponent({
   }, [isFilterOpen]);
 
   useEffect(() => {
-    onChange({
-      quality: qualityFilter,
-      title: searchTitle,
-      showCompleted: showCompleted,
-      showBroken: showBroken,
-      genre: selectedGenre,
-      director: selectedDirector,
-      actor: selectedActor
-    });
+    const handler = setTimeout(() => {
+      onChange({
+        quality: qualityFilter,
+        title: searchTitle?.trim(),
+        showCompleted: showCompleted,
+        showBroken: showBroken,
+        genre: selectedGenre?.trim(),
+        director: selectedDirector?.trim(),
+        actor: selectedActor?.trim(),
+      });
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, selectedDirector, selectedActor, onChange]);
 
   const resetFilter = useCallback(() => {
