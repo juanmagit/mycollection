@@ -1,4 +1,4 @@
-import { ApiConfig, Filter, Movie } from "../../types/types";
+import { Filter, Movie } from "../../types/types";
 import { TMDB_IMAGE_BASE, POSTER_SIZE } from "../../config";
 import { useEffect, useState } from "react";
 import FilterComponent from "../filter";
@@ -10,11 +10,9 @@ import { MoviesSummary } from "../../utils/movies-summary";
 import Suggestions from "../suggestions";
 
 export default function MoviesList({
-  config,
   movies,
   moviesSummary,
 }: {
-  config: ApiConfig;
   movies: Movie[];
   moviesSummary: MoviesSummary;
 }) {
@@ -111,7 +109,6 @@ export default function MoviesList({
           </div>
 
           <Suggestions 
-            config={config} 
             activeFilters={filter} 
             movies={movies}
           />

@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { ApiConfig, Filter, Movie } from "../../types/types";
+import { Filter, Movie } from "../../types/types";
+import { getDiscoverMovies, getGenres, getPerson } from "../../api/tmdb";
 
 export default function Suggestions({ 
-  config,
   activeFilters, 
   movies, 
 }: {
-  config: ApiConfig; 
   activeFilters: Filter; 
   movies: Movie[];
 }) {
@@ -15,14 +14,15 @@ export default function Suggestions({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchGenres = async () => {
-      const res = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${config.tmdbApiKey}&language=${config.tmdbLanguage}`);
-      const data = await res.json();
-      setGenresList(data.genres);
-    };
-    
-    fetchGenres();
-  }, [config]);
+    if (genresList?.length === 0) {
+      const fetchGenres = async () => {
+        const genres = await getGenres();
+        setGenresList(genres);
+      };
+
+      fetchGenres();
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -33,12 +33,11 @@ export default function Suggestions({
 
       setLoading(true);
       try {
-        let discoverUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${config.tmdbApiKey}&language=${config.tmdbLanguage}&sort_by=popularity.desc&vote_count.gte=100`;
+        let discoverUrl = '';
 
         if (activeFilters.actor || activeFilters.director) {
-          const personRes = await fetch(`https://api.themoviedb.org/3/search/person?query=${activeFilters.actor || activeFilters.director}&api_key=${config.tmdbApiKey}`);
-          const personData = await personRes.json();
-          const personId = personData.results[0]?.id;
+          const personData = await getPerson(activeFilters.actor, activeFilters.director);
+          const personId = personData[0]?.id;
           if (personId) {
             discoverUrl += `&${activeFilters.director ? 'with_crew' : 'with_cast'}=${personId}`;
           }
@@ -52,10 +51,9 @@ export default function Suggestions({
           }
         }
 
-        const response = await fetch(discoverUrl);
-        const data = await response.json();
-        const filtered = data.results
-          .filter((m: { id: string; poster_path: string | null; }) => !movies.find(movie => movie.tmdb.id === m.id) && m.poster_path);
+        const discoverResults = await getDiscoverMovies(discoverUrl);
+        const filtered = discoverResults
+          .filter((m) => !movies.find(movie => movie.tmdb.id === m.id) && m.poster_path);
 
         setSuggestions(filtered);
       } catch (error) {
@@ -68,7 +66,7 @@ export default function Suggestions({
     if (genresList?.length > 0) {
       fetchSuggestions();
     }
-  }, [config, genresList, activeFilters, movies]);
+  }, [genresList, activeFilters, movies]);
 
   if (suggestions.length === 0 || loading) return null;
 

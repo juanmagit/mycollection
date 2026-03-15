@@ -1,15 +1,15 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { ApiConfig, Movie } from './types/types';
+import { Movie } from './types/types';
 import Configuration from './features/config';
 import MoviesList from './features/list';
 import { MoviesSummary } from './utils/movies-summary';
 import LoadingSkeleton from './features/skeleton';
+import { ConfigStore } from './features/config/config-store';
 
 export default function MoviesCollection() {
   const [activeSection, setActiveSection] = useState<'moviesList' | 'config'>('moviesList');
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [config, setConfig] = useState<ApiConfig>(null);
   const [moviesSummary, setMoviesSummary] = useState<MoviesSummary>(new MoviesSummary());
 
   // data load
@@ -17,7 +17,7 @@ export default function MoviesCollection() {
     const localMovies = localStorage.getItem('my_movies');
     const localConfig = localStorage.getItem('config');
     if (localMovies) setMovies(JSON.parse(localMovies));
-    if (localConfig) setConfig(JSON.parse(localConfig));
+    if (localConfig) ConfigStore.getInstance().setApiConfig(JSON.parse(localConfig));
   }, []);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function MoviesCollection() {
     }
   }, [movies]);
 
-  if (!config) {
+  if (!ConfigStore.getInstance().getApiConfig()) {
     return <LoadingSkeleton />;
   }
 
@@ -58,8 +58,6 @@ export default function MoviesCollection() {
       {/* configuration section */}
       {activeSection === 'config' && (
         <Configuration
-          config={config}
-          setConfig={setConfig}
           setMovies={setMovies}
         />
       )}
@@ -67,7 +65,6 @@ export default function MoviesCollection() {
       {/* movies list */}
       {activeSection === 'moviesList' && (
         <MoviesList 
-          config={config}
           movies={movies}
           moviesSummary={moviesSummary}
         />

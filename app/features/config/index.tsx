@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Movie, TMDBMovie, ApiConfig } from "../../types/types";
 import { getCards, getListData } from "../../api/trello";
-import { getGenres, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
+import { getGenresObject, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
+import { ConfigStore } from "./config-store";
 
 const parseTrelloName = (trelloName: string) => {
   // search for anything inside [] at the end of the string
@@ -25,38 +26,37 @@ const tmdbStringDateToMovieDate = (date: string): Movie['tmdb']['release_date'] 
 };
 
 export default function Configuration({
-  config,
-  setConfig,
   setMovies,
 }: {
-  config: ApiConfig,
-  setConfig: (config: ApiConfig) => void,
   setMovies: (movies: Movie[]) => void,
 }) {
   const [loading, setLoading] = useState(false);
+  const [localConfig, setLocalConfig] = useState<ApiConfig>(
+    ConfigStore.getInstance().getApiConfig()
+  );
   
   // save configuration
   const saveConfig = (e) => {
     e.preventDefault();
-    localStorage.setItem('config', JSON.stringify(config));
+    localStorage.setItem('config', JSON.stringify(localConfig));
     alert("Configuración guardada localmente");
   };
 
   // trello import
   const importTrello = async () => {
-    if (!config.trelloKey || !config.trelloToken || !config.trelloBoardId) return alert("Faltan datos de Trello");
+    if (!localConfig.trelloKey || !localConfig.trelloToken || !localConfig.trelloBoardId) return alert("Faltan datos de Trello");
     
     setLoading(true);
     try {
-      const list = await getListData(config, config.trelloListName);
-      const trelloCards = await getCards(config, list);
-      const genres = await getGenres(config);
+      const list = await getListData(ConfigStore.getInstance().getApiConfig().trelloListName);
+      const trelloCards = await getCards(list);
+      const genres = await getGenresObject();
       
       const newMovies: Movie[] = await Promise.all(trelloCards.map(async trelloCard => {
         const { trelloTitle, trelloYear } = parseTrelloName(trelloCard.name);
-        const movieData = (await getMovieData(config, trelloTitle, trelloYear) ?? {} as TMDBMovie);
-        const videoKey = await getTrailerKey(config, movieData.id);
-        const movieDetails = await getMovieDetails(config, movieData.id);
+        const movieData = (await getMovieData(trelloTitle, trelloYear) ?? {} as TMDBMovie);
+        const videoKey = await getTrailerKey(movieData.id);
+        const movieDetails = await getMovieDetails(movieData.id);
         return {
           trello: {
             id: trelloCard.id,
@@ -98,6 +98,12 @@ export default function Configuration({
     }
   };
 
+  const handleInputChange = (key: keyof ApiConfig, value: string) => {
+    const updatedConfig = { ...localConfig, [key]: value };
+    setLocalConfig(updatedConfig);
+    ConfigStore.getInstance().setApiConfig(updatedConfig);
+  };
+
   return (
     <section className="bg-slate-900 p-6 rounded-xl border border-slate-800 mt-8 max-w-2xl animate-in fade-in slide-in-from-top-4 duration-300">
       <h3 className="text-xl font-bold text-white mb-4">Configuración de APIs</h3>
@@ -106,38 +112,38 @@ export default function Configuration({
         <div className="space-y-4">
           <input 
             placeholder="Trello API Key" 
-            value={config.trelloKey} 
-            onChange={e => setConfig({...config, trelloKey: e.target.value})}
+            value={localConfig.trelloKey}
+            onChange={e => handleInputChange('trelloKey', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="Trello Token" 
-            value={config.trelloToken} 
-            onChange={e => setConfig({...config, trelloToken: e.target.value})}
+            value={localConfig.trelloToken}
+            onChange={e => handleInputChange('trelloToken', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="ID del Tablero de Trello" 
-            value={config.trelloBoardId} 
-            onChange={e => setConfig({...config, trelloBoardId: e.target.value})}
+            value={localConfig.trelloBoardId}
+            onChange={e => handleInputChange('trelloBoardId', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="Nombre de la Lista (ej: Películas)" 
-            value={config.trelloListName} 
-            onChange={e => setConfig({...config, trelloListName: e.target.value})}
+            value={localConfig.trelloListName}
+            onChange={e => handleInputChange('trelloListName', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="TMDB API Key (v3 auth)" 
-            value={config.tmdbApiKey} 
-            onChange={e => setConfig({...config, tmdbApiKey: e.target.value})}
+            value={localConfig.tmdbApiKey}
+            onChange={e => handleInputChange('tmdbApiKey', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
             placeholder="TMDB API language" 
-            value={config.tmdbLanguage}
-            onChange={e => setConfig({...config, tmdbLanguage: e.target.value})}
+            value={localConfig.tmdbLanguage}
+            onChange={e => handleInputChange('tmdbLanguage', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
         </div>
