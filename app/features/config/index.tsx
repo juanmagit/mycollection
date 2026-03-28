@@ -39,60 +39,74 @@ export default function Configuration({
   const saveConfig = (e) => {
     e.preventDefault();
     localStorage.setItem('config', JSON.stringify(localConfig));
-    alert("Configuración guardada localmente");
+    alert("Saved settings locally");
   };
 
   // trello import
   const importTrello = async () => {
-    if (!localConfig.trelloKey || !localConfig.trelloToken || !localConfig.trelloBoardId) return alert("Faltan datos de Trello");
+    if (!localConfig.trelloKey || !localConfig.trelloToken || !localConfig.trelloBoardId) return alert("Trello data is missing");
     
     setLoading(true);
     try {
       const list = await getListData(ConfigStore.getInstance().getApiConfig().trelloListName);
       const trelloCards = await getCards(list);
       const genres = await getGenresObject();
-      
-      const newMovies: Movie[] = await Promise.all(trelloCards.map(async trelloCard => {
+      const errors = [];
+
+      const newMovies: Movie[] = (await Promise.all(trelloCards.map(async trelloCard => {
         const { trelloTitle, trelloYear } = parseTrelloName(trelloCard.name);
-        const movieData = (await getMovieData(trelloTitle, trelloYear) ?? {} as TMDBMovie);
-        const videoKey = await getTrailerKey(movieData.id);
-        const movieDetails = await getMovieDetails(movieData.id);
-        return {
-          trello: {
-            id: trelloCard.id,
-            title: trelloTitle,
-            desc: trelloCard.desc,
-            url: trelloCard.shortUrl,
-            labels: trelloCard.labels.map(label => (label.name)),
-            completed: trelloCard.dueComplete,
-          },
-          tmdb: {
-            id: movieData.id,
-            adult: movieData.adult,
-            backdrop_path: movieData.backdrop_path,
-            genres: movieData.genre_ids.map(id => genres[id]),
-            original_language: movieData.original_language,
-            original_title: movieData.original_title,
-            overview: movieData.overview,
-            popularity: movieData.popularity,
-            poster_path: movieData.poster_path,
-            release_date: tmdbStringDateToMovieDate(movieData.release_date),
-            title: movieData.title,
-            video: movieData.video,
-            vote_average: movieData.vote_average,
-            vote_count: movieData.vote_count,
-            videoKey: videoKey,
-            runtime: movieDetails.runtime,
-            director: movieDetails.director,
-            cast: movieDetails.cast,
-          },
-        };
-      }));
+        try {
+          const movieData = (await getMovieData(trelloTitle, trelloYear) ?? {} as TMDBMovie);
+          const videoKey = await getTrailerKey(movieData.id);
+          const movieDetails = await getMovieDetails(movieData.id);
+          return {
+            trello: {
+              id: trelloCard.id,
+              title: trelloTitle,
+              desc: trelloCard.desc,
+              url: trelloCard.shortUrl,
+              labels: trelloCard.labels.map(label => (label.name)),
+              completed: trelloCard.dueComplete,
+            },
+            tmdb: {
+              id: movieData.id,
+              adult: movieData.adult,
+              backdrop_path: movieData.backdrop_path,
+              genres: movieData.genre_ids.map(id => genres[id]),
+              original_language: movieData.original_language,
+              original_title: movieData.original_title,
+              overview: movieData.overview,
+              popularity: movieData.popularity,
+              poster_path: movieData.poster_path,
+              release_date: tmdbStringDateToMovieDate(movieData.release_date),
+              title: movieData.title,
+              video: movieData.video,
+              vote_average: movieData.vote_average,
+              vote_count: movieData.vote_count,
+              videoKey: videoKey,
+              runtime: movieDetails.runtime,
+              director: movieDetails.director,
+              cast: movieDetails.cast,
+            },
+          };
+        } catch (error) {
+          errors.push({
+            trelloTitle,
+            trelloYear,
+          });
+          return null;
+        }
+      })
+      )).filter(movie => !!movie);  // remove errored
+
+      if (errors.length > 0) {
+        alert('There were errors in the processing:\n' + errors.map(error => `${error.trelloTitle} (${error.trelloYear})`));
+      }
 
       setMovies(newMovies);
       localStorage.setItem('my_movies', JSON.stringify(newMovies));
     } catch (err) {
-      alert("Error al importar: " + err.message);
+      alert("Error importing: " + err.message);
     } finally {
       setLoading(false);
     }

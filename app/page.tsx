@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Movie } from './types/types';
+import { ApiConfig, Movie } from './types/types';
 import Configuration from './features/config';
 import MoviesList from './features/list';
 import { MoviesSummary } from './utils/movies-summary';
@@ -16,8 +16,18 @@ export default function MoviesCollection() {
   useEffect(() => {
     const localMovies = localStorage.getItem('my_movies');
     const localConfig = localStorage.getItem('config');
-    if (localMovies) setMovies(JSON.parse(localMovies));
-    if (localConfig) ConfigStore.getInstance().setApiConfig(JSON.parse(localConfig));
+
+    setMovies(JSON.parse(localMovies) || []);
+
+    const defaultConfig: ApiConfig =  {
+        trelloKey: '',
+        trelloToken: '',
+        trelloBoardId: '',
+        trelloListName: '',
+        tmdbApiKey: '',
+        tmdbLanguage: '',
+    };
+    ConfigStore.getInstance().setApiConfig(JSON.parse(localConfig) ?? defaultConfig);
   }, []);
 
   useEffect(() => {
