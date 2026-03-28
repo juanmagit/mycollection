@@ -26,7 +26,7 @@ export default function Suggestions({
 
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (!activeFilters.actor && !activeFilters.director && !activeFilters.genre) {
+      if (!activeFilters?.actor && !activeFilters?.director && !activeFilters?.genre) {
         setSuggestions([]);
         return;
       }
