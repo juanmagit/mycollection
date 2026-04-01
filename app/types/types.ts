@@ -48,6 +48,7 @@ export interface TMDBMovieDetails {
   runtime: string;
   director: string;
   cast: string[];
+  country_code: string[];
 }
 
 export interface TMDBPerson {
@@ -90,6 +91,7 @@ export interface Movie {
     runtime: string;
     director: string;
     cast: string[];
+    country_code: string[];
   },
 }
 

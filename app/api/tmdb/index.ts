@@ -42,7 +42,8 @@ export const getMovieDetails = async (id: string): Promise<TMDBMovieDetails> => 
   return {
     runtime: data.runtime,
     director: data.credits?.crew?.find((person: any) => person.job === "Director")?.name,
-    cast: data.credits?.cast?.slice(0, 5).map((actor: any) => actor.name)
+    cast: data.credits?.cast?.slice(0, 5).map((actor: any) => actor.name),
+    country_code: data.production_countries?.map(c => c.iso_3166_1) ?? [],
   };
 };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Movie } from "../../types/types";
 import Badge, { BadgeType } from "./badge";
+import CountryFlag from "../countryflag";
 
 export default function MovieDetails({
   selectedMovie,
@@ -80,6 +81,9 @@ export default function MovieDetails({
                 <p className="text-slate-300 text-sm">
                   {selectedMovie.tmdb.runtime} min
                 </p>
+                {selectedMovie.tmdb.country_code.map((countryCode: string, index: number) => (
+                  <CountryFlag key={index} countryCode={countryCode} />
+                ))}
                 <div className="flex gap-1.5">
                   {selectedMovie.trello.labels?.map((label: string, index: number) => (
                     <Badge key={index} type={label as BadgeType}>{label}</Badge>

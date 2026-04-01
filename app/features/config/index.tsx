@@ -99,6 +99,7 @@ export default function Configuration({
               runtime: movieDetails.runtime,
               director: movieDetails.director,
               cast: movieDetails.cast,
+              country_code: movieDetails.country_code,
             },
           };
         } catch (error) {
