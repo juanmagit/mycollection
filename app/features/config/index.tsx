@@ -34,6 +34,8 @@ export default function Configuration({
   const [localConfig, setLocalConfig] = useState<ApiConfig>(
     ConfigStore.getInstance().getApiConfig()
   );
+  const [finished, setFinished] = useState(0);
+  const [total, setTotal] = useState(0);
   
   // save configuration
   const saveConfig = (e) => {
@@ -46,6 +48,8 @@ export default function Configuration({
   const importTrello = async () => {
     if (!localConfig.trelloKey || !localConfig.trelloToken || !localConfig.trelloBoardId) return alert("Trello data is missing");
     
+    setFinished(0);
+    setTotal(0);
     setLoading(true);
     try {
       const list = await getListData(ConfigStore.getInstance().getApiConfig().trelloListName);
@@ -53,12 +57,20 @@ export default function Configuration({
       const genres = await getGenresObject();
       const errors = [];
 
+      setTotal(trelloCards.length);
+
       const newMovies: Movie[] = (await Promise.all(trelloCards.map(async trelloCard => {
         const { trelloTitle, trelloYear } = parseTrelloName(trelloCard.name);
         try {
           const movieData = (await getMovieData(trelloTitle, trelloYear) ?? {} as TMDBMovie);
+          setFinished(prev => prev + 1/3);
+
           const videoKey = await getTrailerKey(movieData.id);
+          setFinished(prev => prev + 1/3);
+
           const movieDetails = await getMovieDetails(movieData.id);
+          setFinished(prev => prev + 1/3);
+
           return {
             trello: {
               id: trelloCard.id,
@@ -94,6 +106,7 @@ export default function Configuration({
             trelloTitle,
             trelloYear,
           });
+          setFinished(prev => prev + 1);
           return null;
         }
       })
@@ -182,12 +195,30 @@ export default function Configuration({
         >
           {loading ? (
             <>
-              <span className="animate-spin text-xl">⏳</span> Actualizando biblioteca...
+              <span className="animate-spin text-xl">⏳</span>
+              {total > 0 ? `Sincronizando... ${Math.round((finished / total) * 100)}%` : 'Iniciando...'}
             </>
           ) : (
             '🔄 Sincronizar con Trello ahora'
           )}
         </button>
+
+        {/* progress bar */}
+        {loading && total > 0 && (
+          <div className="w-full h-1.5 bg-slate-800 rounded-full mt-4 overflow-hidden">
+            <div 
+              className="h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_8px_#10b981]"
+              style={{ width: `${(finished / total) * 100}%` }}
+            />
+          </div>
+        )}
+        
+        {loading && (
+          <p className="text-[10px] text-slate-400 mt-2 text-center font-mono">
+            Procesando: {Math.floor(finished)} de {total} películas
+          </p>
+        )}
+
         <p className="text-[10px] text-slate-500 mt-3 text-center italic">
           Las claves se guardan en el almacenamiento de tu navegador (LocalStorage).
         </p>
