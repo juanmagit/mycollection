@@ -106,7 +106,9 @@ export default function Configuration({
           errors.push({
             trelloTitle,
             trelloYear,
+            errorMessage: error.message,
           });
+          console.error(error);
           setFinished(prev => prev + 1);
           return null;
         }
@@ -114,7 +116,7 @@ export default function Configuration({
       )).filter(movie => !!movie);  // remove errored
 
       if (errors.length > 0) {
-        alert('There were errors in the processing:\n' + errors.map(error => `${error.trelloTitle} (${error.trelloYear})`));
+        alert('There were errors in the processing:\n' + errors.map(error => `${error.trelloTitle} (${error.trelloYear}) Error: ${error.errorMessage}`));
       }
 
       setMovies(newMovies);
