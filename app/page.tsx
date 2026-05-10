@@ -17,7 +17,11 @@ export default function MoviesCollection() {
     const localMovies = localStorage.getItem('my_movies');
     const localConfig = localStorage.getItem('config');
 
-    setMovies(JSON.parse(localMovies) || []);
+    try {
+      setMovies(JSON.parse(localMovies) || []);
+    } catch (error) {
+      alert('The movies database is corrupt: ' + error);
+    }
 
     const defaultConfig: ApiConfig =  {
         trelloKey: '',
