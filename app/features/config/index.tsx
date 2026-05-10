@@ -128,6 +128,10 @@ export default function Configuration({
     }
   };
 
+  const resetTrello = async () => {
+    localStorage.setItem('my_movies', JSON.stringify([]));
+  };
+
   const handleInputChange = (key: keyof ApiConfig, value: string) => {
     const updatedConfig = { ...localConfig, [key]: value };
     setLocalConfig(updatedConfig);
@@ -226,6 +230,18 @@ export default function Configuration({
           Las claves se guardan en el almacenamiento de tu navegador (LocalStorage).
         </p>
       </div>
+
+      <button 
+        onClick={resetTrello} 
+        disabled={loading}
+        className={`w-full py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
+          loading 
+            ? 'bg-slate-800 text-slate-500 cursor-not-allowed' :
+          'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-900/20'
+        }`}
+      >
+        Resetear
+      </button>
     </section>
   );
 }

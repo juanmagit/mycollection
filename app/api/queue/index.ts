@@ -3,7 +3,7 @@ export class FetchQueue {
   running: number;
   queue: any[];
 
-  constructor(maxSimultaneous = 10) {
+  constructor(maxSimultaneous = 5) {
     this.maxSimultaneous = maxSimultaneous;
     this.running = 0;
     this.queue = [];
