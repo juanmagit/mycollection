@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Movie, TMDBMovie, ApiConfig } from "../../types/types";
 import { getCards, getListData } from "../../api/trello";
 import { getGenresObject, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
@@ -36,6 +37,7 @@ export default function Configuration({
   );
   const [finished, setFinished] = useState(0);
   const [total, setTotal] = useState(0);
+  const [showSensitive, setShowSensitive] = useState(false);
   
   // save configuration
   const saveConfig = (e) => {
@@ -140,41 +142,67 @@ export default function Configuration({
 
   return (
     <section className="bg-slate-900 p-6 rounded-xl border border-slate-800 mt-8 max-w-2xl animate-in fade-in slide-in-from-top-4 duration-300">
-      <h3 className="text-xl font-bold text-white mb-4">Configuración de APIs</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-white">Configuración de APIs</h3>
+        <button
+          type="button"
+          onClick={() => setShowSensitive(!showSensitive)}
+          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 transition-all select-none animate-in fade-in duration-200"
+          title={showSensitive ? "Ocultar claves" : "Mostrar claves"}
+        >
+          {showSensitive ? (
+            <>
+              <EyeOff size={16} className="text-sky-400 animate-in spin-in-12 duration-200" />
+              <span>Ocultar claves</span>
+            </>
+          ) : (
+            <>
+              <Eye size={16} className="text-sky-400 animate-in spin-in-12 duration-200" />
+              <span>Mostrar claves</span>
+            </>
+          )}
+        </button>
+      </div>
       
       <form onSubmit={saveConfig} className="grid grid-cols-1 gap-4">
         <div className="space-y-4">
           <input 
+            type={showSensitive ? "text" : "password"}
             placeholder="Trello API Key" 
             value={localConfig.trelloKey}
             onChange={e => handleInputChange('trelloKey', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
+            type={showSensitive ? "text" : "password"}
             placeholder="Trello Token" 
             value={localConfig.trelloToken}
             onChange={e => handleInputChange('trelloToken', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
+            type="text"
             placeholder="ID del Tablero de Trello" 
             value={localConfig.trelloBoardId}
             onChange={e => handleInputChange('trelloBoardId', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
+            type="text"
             placeholder="Nombre de la Lista (ej: Películas)" 
             value={localConfig.trelloListName}
             onChange={e => handleInputChange('trelloListName', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
+            type={showSensitive ? "text" : "password"}
             placeholder="TMDB API Key (v3 auth)" 
             value={localConfig.tmdbApiKey}
             onChange={e => handleInputChange('tmdbApiKey', e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 p-3 rounded-lg text-sky-400 placeholder:text-slate-600 focus:border-sky-500 outline-none transition-all"
           />
           <input 
+            type="text"
             placeholder="TMDB API language" 
             value={localConfig.tmdbLanguage}
             onChange={e => handleInputChange('tmdbLanguage', e.target.value)}
