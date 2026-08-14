@@ -12,6 +12,10 @@ export default function Suggestions({
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [genresList, setGenresList] = useState<{id: number, name: string}[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentUrl, setCurrentUrl] = useState("");
 
   useEffect(() => {
     if (genresList?.length === 0) {
@@ -28,6 +32,9 @@ export default function Suggestions({
     const fetchSuggestions = async () => {
       if (!activeFilters?.actor && !activeFilters?.director && !activeFilters?.genre) {
         setSuggestions([]);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setCurrentUrl("");
         return;
       }
 
@@ -47,15 +54,21 @@ export default function Suggestions({
             discoverUrl += `&with_genres=${genreObj.id}`;
           } else {
             setSuggestions([]);
+            setCurrentPage(1);
+            setTotalPages(1);
+            setCurrentUrl("");
             return;
           }
         }
 
-        const discoverResults = await getDiscoverMovies(discoverUrl);
-        const filtered = discoverResults
+        setCurrentUrl(discoverUrl);
+        const { results, totalPages: fetchedTotalPages } = await getDiscoverMovies(discoverUrl, 1);
+        const filtered = results
           .filter((m) => !movies.find(movie => movie.tmdb.id === m.id) && m.poster_path);
 
         setSuggestions(filtered);
+        setCurrentPage(1);
+        setTotalPages(fetchedTotalPages);
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -67,6 +80,30 @@ export default function Suggestions({
       fetchSuggestions();
     }
   }, [genresList, activeFilters, movies]);
+
+  const handleLoadMore = async () => {
+    if (loadingMore || currentPage >= totalPages || !currentUrl) return;
+
+    setLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const { results, totalPages: fetchedTotalPages } = await getDiscoverMovies(currentUrl, nextPage);
+      const filtered = results
+        .filter((m) => !movies.find(movie => movie.tmdb.id === m.id) && m.poster_path);
+
+      setSuggestions((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const uniqueNew = filtered.filter((m) => !existingIds.has(m.id));
+        return [...prev, ...uniqueNew];
+      });
+      setCurrentPage(nextPage);
+      setTotalPages(fetchedTotalPages);
+    } catch (error) {
+      console.error("Error loading more suggestions:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   if (suggestions.length === 0 || loading) return null;
 
@@ -116,6 +153,32 @@ export default function Suggestions({
             </div>
           </a>
         ))}
+      </div>
+
+      <div className="flex flex-col items-center justify-center mt-8 gap-4">
+        {currentPage < totalPages ? (
+          <button
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="px-6 py-2 rounded-full border border-slate-800 hover:border-sky-500/50 bg-slate-950/50 hover:bg-sky-500/5 text-slate-400 hover:text-white text-xs font-semibold tracking-wider transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2 shadow-lg"
+          >
+            {loadingMore ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5 text-sky-500" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Cargando...
+              </>
+            ) : (
+              "Cargar más sugerencias"
+            )}
+          </button>
+        ) : (
+          <span className="text-slate-600 text-[11px] font-medium tracking-wide uppercase">
+            No hay más sugerencias
+          </span>
+        )}
       </div>
     </div>
   );

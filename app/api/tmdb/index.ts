@@ -57,11 +57,14 @@ export const getTrailerKey = async (id: string): Promise<string> => {
   }
 }
 
-export const getDiscoverMovies = async (extraQuery: string): Promise<TMDBMovie[]> => {
-  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&language=${ConfigStore.getInstance().getApiConfig().tmdbLanguage}&sort_by=popularity.desc&vote_count.gte=100${extraQuery}`);
+export const getDiscoverMovies = async (extraQuery: string, page = 1): Promise<{ results: TMDBMovie[]; totalPages: number }> => {
+  const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&language=${ConfigStore.getInstance().getApiConfig().tmdbLanguage}&sort_by=popularity.desc&vote_count.gte=100${extraQuery}&page=${page}`);
   const data = await res.json();
 
-  return data.results;
+  return {
+    results: data.results || [],
+    totalPages: data.total_pages || 1
+  };
 }
 
 export const getPerson = async (actor: string, director: string): Promise<TMDBPerson[]> => {
