@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Movie, TMDBMovie, ApiConfig } from "../../types/types";
+import { Movie, TMDBMovie, ApiConfig, TrelloLabel } from "../../types/types";
 import { getCards, getListData } from "../../api/trello";
 import { getGenresObject, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
 import { ConfigStore } from "./config-store";
@@ -24,6 +24,36 @@ const tmdbStringDateToMovieDate = (date: string): Movie['tmdb']['release_date'] 
     month: month ?? '',
     day: day ?? '',
   }
+};
+
+const extractLocation = (trelloLabels: TrelloLabel[]): {
+  labels: string[];
+  location: Movie['trello']['location'];
+} => {
+  const labels = trelloLabels.map(label => label.name);
+  const regexLocation = /^E(\d+)-F([1-9])-C([1-3])$/i;
+  let location = undefined;
+  let locationLabel = undefined;
+
+  for (const label of labels) {
+    const match = label.match(regexLocation);
+    if (match) {
+      location = {
+        shelf: parseInt(match[1], 10),
+        row: parseInt(match[2], 10),
+        column: parseInt(match[3], 10),
+        raw: label,
+      };
+      locationLabel = label;
+      break;
+    }
+  }
+
+  const filteredLabels = locationLabel 
+    ? labels.filter(label => label !== locationLabel) 
+    : labels;
+
+  return { labels: filteredLabels, location };
 };
 
 export default function Configuration({
@@ -73,14 +103,17 @@ export default function Configuration({
           const movieDetails = await getMovieDetails(movieData.id);
           setFinished(prev => prev + 1/3);
 
+          const { labels, location } = extractLocation(trelloCard.labels);
+
           return {
             trello: {
               id: trelloCard.id,
               title: trelloTitle,
               desc: trelloCard.desc,
               url: trelloCard.shortUrl,
-              labels: trelloCard.labels.map(label => (label.name)),
+              labels,
               completed: trelloCard.dueComplete,
+              location,
             },
             tmdb: {
               id: movieData.id,
