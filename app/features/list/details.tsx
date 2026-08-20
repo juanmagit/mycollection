@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Movie } from "../../types/types";
 import Badge, { BadgeType } from "./badge";
 import CountryFlag from "../countryflag";
+import ShelfLocation from "./shelf-location";
 
 export default function MovieDetails({
   selectedMovie,
@@ -131,13 +132,16 @@ export default function MovieDetails({
             )}
           </div>
 
-
           <div className="space-y-2">
             <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Sinopsis</span>
             <p className="text-slate-300 text-sm leading-relaxed">
               {selectedMovie.tmdb.overview}
             </p>
           </div>
+
+          {selectedMovie.trello.location && (
+            <ShelfLocation location={selectedMovie.trello.location} />
+          )}
         </div>
 
         {/* footer: buttons */}

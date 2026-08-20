@@ -71,6 +71,12 @@ export interface Movie {
     url: string;
     labels: string[];
     completed: boolean;
+    location?: {
+      shelf: number;
+      row: number;
+      column: number;
+      raw: string;
+    };
   },
   tmdb: {
     id: string;
