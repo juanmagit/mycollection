@@ -98,6 +98,11 @@ export interface Movie {
     director: string;
     cast: string[];
     country_code: string[];
+    adult: boolean;
+    original_language: string;
+    popularity: number;
+    video: boolean;
+    vote_count: number;
   },
 }
 

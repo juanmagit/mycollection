@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { Movie, TMDBMovie, ApiConfig, TrelloLabel } from "../../types/types";
+import { Eye, EyeOff, Zap, RefreshCw, Trash2 } from "lucide-react";
+import { Movie, TMDBMovie, ApiConfig, TrelloLabel, TrelloCard } from "../../types/types";
 import { getCards, getListData } from "../../api/trello";
 import { getGenresObject, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
 import { ConfigStore } from "./config-store";
@@ -57,11 +57,15 @@ const extractLocation = (trelloLabels: TrelloLabel[]): {
 };
 
 export default function Configuration({
+  movies = [],
   setMovies,
 }: {
-  setMovies: (movies: Movie[]) => void,
+  movies?: Movie[];
+  setMovies: (movies: Movie[]) => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [syncType, setSyncType] = useState<'full' | 'fast' | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string>('');
   const [localConfig, setLocalConfig] = useState<ApiConfig>(
     ConfigStore.getInstance().getApiConfig()
   );
@@ -76,67 +80,82 @@ export default function Configuration({
     alert("Saved settings locally");
   };
 
-  // trello import
+  const fetchTMDBMovieData = async (
+    trelloCard: TrelloCard,
+    genres: Record<number, string>,
+    onProgressStep: () => void = () => setFinished(prev => prev + 1 / 3)
+  ): Promise<Movie> => {
+    const { trelloTitle, trelloYear } = parseTrelloName(trelloCard.name);
+    const movieData = (await getMovieData(trelloTitle, trelloYear) ?? {} as TMDBMovie);
+    onProgressStep();
+
+    const videoKey = await getTrailerKey(movieData.id);
+    onProgressStep();
+
+    const movieDetails = await getMovieDetails(movieData.id);
+    onProgressStep();
+
+    const { labels, location } = extractLocation(trelloCard.labels);
+
+    return {
+      trello: {
+        id: trelloCard.id,
+        title: trelloTitle,
+        desc: trelloCard.desc,
+        url: trelloCard.shortUrl,
+        labels,
+        completed: trelloCard.dueComplete,
+        location,
+      },
+      tmdb: {
+        id: movieData.id,
+        adult: movieData.adult,
+        backdrop_path: movieData.backdrop_path,
+        genres: movieData.genre_ids.map(id => genres[id]),
+        original_language: movieData.original_language,
+        original_title: movieData.original_title,
+        overview: movieData.overview,
+        popularity: movieData.popularity,
+        poster_path: movieData.poster_path,
+        release_date: tmdbStringDateToMovieDate(movieData.release_date),
+        title: movieData.title,
+        video: movieData.video,
+        vote_average: movieData.vote_average,
+        vote_count: movieData.vote_count,
+        videoKey: videoKey,
+        runtime: movieDetails.runtime,
+        director: movieDetails.director,
+        cast: movieDetails.cast,
+        country_code: movieDetails.country_code,
+      },
+    };
+  };
+
+  // trello full import
   const importTrello = async () => {
-    if (!localConfig.trelloKey || !localConfig.trelloToken || !localConfig.trelloBoardId) return alert("Trello data is missing");
+    if (!localConfig.trelloKey || !localConfig.trelloToken || !localConfig.trelloBoardId) {
+      return alert("Trello data is missing");
+    }
     
     setFinished(0);
     setTotal(0);
+    setSyncType('full');
+    setStatusMessage('Obteniendo lista de Trello...');
     setLoading(true);
+
     try {
       const list = await getListData(ConfigStore.getInstance().getApiConfig().trelloListName);
       const trelloCards = await getCards(list);
       const genres = await getGenresObject();
-      const errors = [];
+      const errors: Array<{ trelloTitle: string; trelloYear: string | null; errorMessage: string }> = [];
 
       setTotal(trelloCards.length);
+      setStatusMessage('Consultando TMDB para todas las películas...');
 
       const newMovies: Movie[] = (await Promise.all(trelloCards.map(async trelloCard => {
         const { trelloTitle, trelloYear } = parseTrelloName(trelloCard.name);
         try {
-          const movieData = (await getMovieData(trelloTitle, trelloYear) ?? {} as TMDBMovie);
-          setFinished(prev => prev + 1/3);
-
-          const videoKey = await getTrailerKey(movieData.id);
-          setFinished(prev => prev + 1/3);
-
-          const movieDetails = await getMovieDetails(movieData.id);
-          setFinished(prev => prev + 1/3);
-
-          const { labels, location } = extractLocation(trelloCard.labels);
-
-          return {
-            trello: {
-              id: trelloCard.id,
-              title: trelloTitle,
-              desc: trelloCard.desc,
-              url: trelloCard.shortUrl,
-              labels,
-              completed: trelloCard.dueComplete,
-              location,
-            },
-            tmdb: {
-              id: movieData.id,
-              adult: movieData.adult,
-              backdrop_path: movieData.backdrop_path,
-              genres: movieData.genre_ids.map(id => genres[id]),
-              original_language: movieData.original_language,
-              original_title: movieData.original_title,
-              overview: movieData.overview,
-              popularity: movieData.popularity,
-              poster_path: movieData.poster_path,
-              release_date: tmdbStringDateToMovieDate(movieData.release_date),
-              title: movieData.title,
-              video: movieData.video,
-              vote_average: movieData.vote_average,
-              vote_count: movieData.vote_count,
-              videoKey: videoKey,
-              runtime: movieDetails.runtime,
-              director: movieDetails.director,
-              cast: movieDetails.cast,
-              country_code: movieDetails.country_code,
-            },
-          };
+          return await fetchTMDBMovieData(trelloCard, genres);
         } catch (error) {
           errors.push({
             trelloTitle,
@@ -147,24 +166,125 @@ export default function Configuration({
           setFinished(prev => prev + 1);
           return null;
         }
-      })
-      )).filter(movie => !!movie);  // remove errored
+      }))).filter((movie): movie is Movie => !!movie);
 
       if (errors.length > 0) {
-        alert('There were errors in the processing:\n' + errors.map(error => `${error.trelloTitle} (${error.trelloYear}) Error: ${error.errorMessage}`));
+        alert('Hubo errores al procesar algunas películas:\n' + errors.map(error => `${error.trelloTitle} (${error.trelloYear}) Error: ${error.errorMessage}`).join('\n'));
       }
 
       setMovies(newMovies);
       localStorage.setItem('my_movies', JSON.stringify(newMovies));
     } catch (err) {
-      alert("Error importing: " + err.message);
+      alert("Error en la importación: " + err.message);
     } finally {
       setLoading(false);
+      setSyncType(null);
+      setStatusMessage('');
+    }
+  };
+
+  // trello fast import
+  const importTrelloFast = async () => {
+    if (!localConfig.trelloKey || !localConfig.trelloToken || !localConfig.trelloBoardId) {
+      return alert("Trello data is missing");
+    }
+
+    setFinished(0);
+    setTotal(0);
+    setSyncType('fast');
+    setStatusMessage('Obteniendo tarjetas de Trello...');
+    setLoading(true);
+
+    try {
+      const list = await getListData(ConfigStore.getInstance().getApiConfig().trelloListName);
+      const trelloCards = await getCards(list);
+      
+      // Get current local movies
+      const existingMoviesList: Movie[] = movies.length > 0 
+        ? movies 
+        : JSON.parse(localStorage.getItem('my_movies') || '[]');
+
+      const existingMap = new Map<string, Movie>(
+        existingMoviesList.map(m => [m.trello.id, m])
+      );
+
+      // Find new cards
+      const newCards = trelloCards.filter(card => !existingMap.has(card.id));
+      const errors: Array<{ trelloTitle: string; trelloYear: string | null; errorMessage: string }> = [];
+
+      const newlyFetchedMap = new Map<string, Movie>();
+
+      if (newCards.length > 0) {
+        setTotal(newCards.length);
+        setStatusMessage(`Detectadas ${newCards.length} películas nuevas. Consultando TMDB...`);
+        const genres = await getGenresObject();
+
+        await Promise.all(newCards.map(async trelloCard => {
+          const { trelloTitle, trelloYear } = parseTrelloName(trelloCard.name);
+          try {
+            const movie = await fetchTMDBMovieData(trelloCard, genres);
+            newlyFetchedMap.set(trelloCard.id, movie);
+          } catch (error) {
+            errors.push({
+              trelloTitle,
+              trelloYear,
+              errorMessage: error.message,
+            });
+            console.error(error);
+            setFinished(prev => prev + 1);
+          }
+        }));
+      } else {
+        setStatusMessage('No hay películas nuevas. Actualizando metadatos de Trello...');
+      }
+
+      // Re-construct the full movies list in Trello's order
+      const finalMovies: Movie[] = trelloCards.map(trelloCard => {
+        if (newlyFetchedMap.has(trelloCard.id)) {
+          return newlyFetchedMap.get(trelloCard.id)!;
+        }
+        
+        if (existingMap.has(trelloCard.id)) {
+          const existing = existingMap.get(trelloCard.id)!;
+          const { labels, location } = extractLocation(trelloCard.labels);
+          const { trelloTitle } = parseTrelloName(trelloCard.name);
+          return {
+            ...existing,
+            trello: {
+              ...existing.trello,
+              title: trelloTitle,
+              desc: trelloCard.desc,
+              url: trelloCard.shortUrl,
+              labels,
+              completed: trelloCard.dueComplete,
+              location,
+            }
+          };
+        }
+
+        return null;
+      }).filter((movie): movie is Movie => !!movie);
+
+      if (errors.length > 0) {
+        alert('Hubo errores al procesar películas nuevas:\n' + errors.map(error => `${error.trelloTitle} (${error.trelloYear}) Error: ${error.errorMessage}`).join('\n'));
+      }
+
+      setMovies(finalMovies);
+      localStorage.setItem('my_movies', JSON.stringify(finalMovies));
+    } catch (err) {
+      alert("Error en la sincronización rápida: " + err.message);
+    } finally {
+      setLoading(false);
+      setSyncType(null);
+      setStatusMessage('');
     }
   };
 
   const resetTrello = async () => {
-    localStorage.setItem('my_movies', JSON.stringify([]));
+    if (confirm("¿Seguro que deseas vaciar la base de datos local de películas?")) {
+      setMovies([]);
+      localStorage.setItem('my_movies', JSON.stringify([]));
+    }
   };
 
   const handleInputChange = (key: keyof ApiConfig, value: string) => {
@@ -174,7 +294,7 @@ export default function Configuration({
   };
 
   return (
-    <section className="bg-slate-900 p-6 rounded-xl border border-slate-800 mt-8 max-w-2xl animate-in fade-in slide-in-from-top-4 duration-300">
+    <section className="bg-slate-900 p-6 rounded-xl border border-slate-800 mt-8 max-w-2xl animate-in fade-in slide-in-from-top-4 duration-300 shadow-xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-white">Configuración de APIs</h3>
         <button
@@ -251,58 +371,102 @@ export default function Configuration({
         </button>
       </form>
 
-      <div className="mt-6 pt-6 border-t border-slate-800">
-        <button 
-          onClick={importTrello} 
-          disabled={loading}
-          className={`w-full py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
-            loading 
-            ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20'
-          }`}
-        >
-          {loading ? (
-            <>
-              <span className="animate-spin text-xl">⏳</span>
-              {total > 0 ? `Sincronizando... ${Math.round((finished / total) * 100)}%` : 'Iniciando...'}
-            </>
-          ) : (
-            '🔄 Sincronizar con Trello ahora'
-          )}
-        </button>
+      <div className="mt-6 pt-6 border-t border-slate-800 space-y-3">
+        <h4 className="text-sm font-semibold text-slate-300 mb-1">Sincronización con Trello</h4>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button 
+            type="button"
+            onClick={importTrelloFast} 
+            disabled={loading}
+            className={`py-3 px-4 rounded-lg font-bold transition-all flex items-center justify-center gap-2 text-sm ${
+              loading 
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 active:scale-[0.98]'
+            }`}
+          >
+            {loading && syncType === 'fast' ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                <span>Sincronizando...</span>
+              </>
+            ) : (
+              <>
+                <Zap size={18} className="text-emerald-200 fill-emerald-200" />
+                <span>Sincronización rápida</span>
+              </>
+            )}
+          </button>
 
-        {/* progress bar */}
-        {loading && total > 0 && (
-          <div className="w-full h-1.5 bg-slate-800 rounded-full mt-4 overflow-hidden">
-            <div 
-              className="h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_8px_#10b981]"
-              style={{ width: `${(finished / total) * 100}%` }}
-            />
+          <button 
+            type="button"
+            onClick={importTrello} 
+            disabled={loading}
+            className={`py-3 px-4 rounded-lg font-bold transition-all flex items-center justify-center gap-2 text-sm ${
+              loading 
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 shadow-md active:scale-[0.98]'
+            }`}
+          >
+            {loading && syncType === 'full' ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                <span>Sincronizando...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw size={18} className="text-sky-400" />
+                <span>Sincronización completa</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* progress bar & status */}
+        {loading && (
+          <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 mt-3 animate-in fade-in duration-200">
+            <div className="flex justify-between items-center text-xs text-slate-400 mb-1.5 font-mono">
+              <span>{statusMessage || 'Procesando...'}</span>
+              {total > 0 && <span>{Math.round((finished / total) * 100)}%</span>}
+            </div>
+            {total > 0 && (
+              <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-300 ${
+                    syncType === 'fast' 
+                      ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' 
+                      : 'bg-sky-500 shadow-[0_0_8px_#0284c7]'
+                  }`}
+                  style={{ width: `${Math.min(100, Math.round((finished / total) * 100))}%` }}
+                />
+              </div>
+            )}
+            {total > 0 && (
+              <p className="text-[10px] text-slate-500 mt-1.5 text-center font-mono">
+                Procesando: {Math.floor(finished)} de {total} películas nuevas en TMDB
+              </p>
+            )}
           </div>
         )}
-        
-        {loading && (
-          <p className="text-[10px] text-slate-400 mt-2 text-center font-mono">
-            Procesando: {Math.floor(finished)} de {total} películas
-          </p>
-        )}
 
-        <p className="text-[10px] text-slate-500 mt-3 text-center italic">
-          Las claves se guardan en el almacenamiento de tu navegador (LocalStorage).
+        <p className="text-[10px] text-slate-500 mt-2 text-center italic">
+          <strong>Rápida:</strong> Solo consulta TMDB para películas nuevas. <strong>Completa:</strong> Reconsulta todas en TMDB.
         </p>
-      </div>
 
-      <button 
-        onClick={resetTrello} 
-        disabled={loading}
-        className={`w-full py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
-          loading 
-            ? 'bg-slate-800 text-slate-500 cursor-not-allowed' :
-          'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-900/20'
-        }`}
-      >
-        Resetear
-      </button>
+        <button 
+          type="button"
+          onClick={resetTrello} 
+          disabled={loading}
+          className={`w-full py-2.5 rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-2 mt-4 ${
+            loading 
+              ? 'bg-slate-800 text-slate-500 cursor-not-allowed' :
+            'bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-900/50'
+          }`}
+        >
+          <Trash2 size={14} />
+          Resetear base de datos local
+        </button>
+      </div>
     </section>
   );
 }
