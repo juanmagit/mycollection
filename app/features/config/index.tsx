@@ -1,9 +1,15 @@
 import { useState } from "react";
-import { Eye, EyeOff, Zap, RefreshCw, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Zap, RefreshCw, Trash2, AlertTriangle, X, Film, ExternalLink } from "lucide-react";
 import { Movie, TMDBMovie, ApiConfig, TrelloLabel, TrelloCard } from "../../types/types";
 import { getCards, getListData } from "../../api/trello";
 import { getGenresObject, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
 import { ConfigStore } from "./config-store";
+
+export interface SyncWarning {
+  cardName: string;
+  cardUrl: string;
+  message: string;
+}
 
 const parseTrelloName = (trelloName: string) => {
   // search for anything inside [] at the end of the string
@@ -15,6 +21,21 @@ const parseTrelloName = (trelloName: string) => {
   const trelloTitle = trelloName.replace(regexYear, "").trim();
   
   return { trelloTitle, trelloYear };
+};
+
+const getTrelloYearWarnings = (trelloCards: TrelloCard[]): SyncWarning[] => {
+  const warnings: SyncWarning[] = [];
+  for (const card of trelloCards) {
+    const { trelloYear } = parseTrelloName(card.name);
+    if (!trelloYear) {
+      warnings.push({
+        cardName: card.name,
+        cardUrl: card.shortUrl,
+        message: `"${card.name}" no especifica el año entre corchetes [AÑO].`,
+      });
+    }
+  }
+  return warnings;
 };
 
 const tmdbStringDateToMovieDate = (date: string): Movie['tmdb']['release_date'] => {
@@ -72,6 +93,8 @@ export default function Configuration({
   const [finished, setFinished] = useState(0);
   const [total, setTotal] = useState(0);
   const [showSensitive, setShowSensitive] = useState(false);
+  const [syncWarnings, setSyncWarnings] = useState<SyncWarning[]>([]);
+  const [showWarningModal, setShowWarningModal] = useState<boolean>(false);
   
   // save configuration
   const saveConfig = (e) => {
@@ -142,10 +165,14 @@ export default function Configuration({
     setSyncType('full');
     setStatusMessage('Obteniendo lista de Trello...');
     setLoading(true);
+    setSyncWarnings([]);
 
     try {
       const list = await getListData(ConfigStore.getInstance().getApiConfig().trelloListName);
       const trelloCards = await getCards(list);
+      const warnings = getTrelloYearWarnings(trelloCards);
+      setSyncWarnings(warnings);
+
       const genres = await getGenresObject();
       const errors: Array<{ trelloTitle: string; trelloYear: string | null; errorMessage: string }> = [];
 
@@ -174,6 +201,10 @@ export default function Configuration({
 
       setMovies(newMovies);
       localStorage.setItem('my_movies', JSON.stringify(newMovies));
+
+      if (warnings.length > 0) {
+        setShowWarningModal(true);
+      }
     } catch (err) {
       alert("Error en la importación: " + err.message);
     } finally {
@@ -194,10 +225,13 @@ export default function Configuration({
     setSyncType('fast');
     setStatusMessage('Obteniendo tarjetas de Trello...');
     setLoading(true);
+    setSyncWarnings([]);
 
     try {
       const list = await getListData(ConfigStore.getInstance().getApiConfig().trelloListName);
       const trelloCards = await getCards(list);
+      const warnings = getTrelloYearWarnings(trelloCards);
+      setSyncWarnings(warnings);
       
       // Get current local movies
       const existingMoviesList: Movie[] = movies.length > 0 
@@ -271,6 +305,10 @@ export default function Configuration({
 
       setMovies(finalMovies);
       localStorage.setItem('my_movies', JSON.stringify(finalMovies));
+
+      if (warnings.length > 0) {
+        setShowWarningModal(true);
+      }
     } catch (err) {
       alert("Error en la sincronización rápida: " + err.message);
     } finally {
@@ -449,6 +487,25 @@ export default function Configuration({
           </div>
         )}
 
+        {/* persistent warnings banner */}
+        {syncWarnings.length > 0 && !loading && (
+          <div className="bg-amber-950/20 border border-amber-500/30 p-3.5 rounded-lg mt-3 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs">
+                <AlertTriangle size={16} className="shrink-0" />
+                <span>Se registraron {syncWarnings.length} advertencia(s) en la sincronización</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWarningModal(true)}
+                className="text-xs text-amber-300 hover:text-amber-200 underline font-medium"
+              >
+                Ver detalles
+              </button>
+            </div>
+          </div>
+        )}
+
         <p className="text-[10px] text-slate-500 mt-2 text-center italic">
           <strong>Rápida:</strong> Solo consulta TMDB para películas nuevas. <strong>Completa:</strong> Reconsulta todas en TMDB.
         </p>
@@ -467,6 +524,69 @@ export default function Configuration({
           Resetear base de datos local
         </button>
       </div>
+
+      {/* Modal de Advertencias de Sincronización */}
+      {showWarningModal && syncWarnings.length > 0 && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400">
+                  <AlertTriangle size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Advertencias de Sincronización</h3>
+                  <p className="text-xs text-slate-400">Se encontraron {syncWarnings.length} película(s) sin año especificado</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWarningModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-amber-950/30 border border-amber-800/30 rounded-lg text-amber-200 text-xs leading-relaxed">
+              Las películas sin el año entre corchetes <code>[AÑO]</code> en Trello pueden generar resultados imprecisos al buscar metadatos en TMDB.
+            </div>
+
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+              {syncWarnings.map((warning, index) => (
+                <div key={index} className="flex items-center justify-between gap-2.5 p-2.5 bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-300">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Film size={14} className="text-amber-400 shrink-0" />
+                    <span className="truncate">{warning.message}</span>
+                  </div>
+                  {warning.cardUrl && (
+                    <a
+                      href={warning.cardUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-sky-400 hover:text-sky-300 hover:underline shrink-0 bg-sky-950/60 border border-sky-800/40 px-2.5 py-1 rounded-md transition-colors"
+                      title="Abrir tarjeta en Trello"
+                    >
+                      <span>Abrir en Trello</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowWarningModal(false)}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition-colors"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
