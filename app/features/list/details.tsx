@@ -3,6 +3,29 @@ import { Movie } from "../../types/types";
 import Badge, { BadgeType } from "./badge";
 import CountryFlag from "../countryflag";
 import ShelfLocation from "./shelf-location";
+import { ExternalLink } from "lucide-react";
+import { TMDB_IMAGE_BASE } from "../../config";
+
+export const getFilmAffinityUrl = (movie: Movie): string => {
+  const movieTitle = movie.tmdb.title || movie.trello.title;
+  const movieYear = movie.tmdb.release_date?.year;
+  const searchQuery = movieYear
+    ? `!ducky ${movieTitle} ${movieYear} site:filmaffinity.com`
+    : `!ducky ${movieTitle} site:filmaffinity.com`;
+  return `https://duckduckgo.com/?q=${encodeURIComponent(searchQuery)}`;
+};
+
+export const getYouTubeEmbedUrl = (movie: Movie): string => {
+  const videoKey = movie.tmdb.videoKey;
+  if (!videoKey) return "";
+  return `https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=0&modestbranding=1`;
+};
+
+export const getTMDBBackdropUrl = (movie: Movie, size = "w780"): string => {
+  const backdropPath = movie.tmdb.backdrop_path;
+  if (!backdropPath) return "";
+  return `${TMDB_IMAGE_BASE}${size}${backdropPath}`;
+};
 
 export default function MovieDetails({
   selectedMovie,
@@ -12,6 +35,8 @@ export default function MovieDetails({
   onClose: () => void;
 }) {
   const [showVideo, setShowVideo] = useState(false);
+
+  const filmAffinityUrl = getFilmAffinityUrl(selectedMovie);
 
   useEffect(() => {
     if (!selectedMovie) setShowVideo(false);
@@ -40,7 +65,7 @@ export default function MovieDetails({
           {selectedMovie.tmdb.videoKey && showVideo ? (
             <iframe
               className="w-full h-full animate-in zoom-in-95 duration-300"
-              src={`https://www.youtube.com/embed/${selectedMovie.tmdb.videoKey}?autoplay=1&mute=0&modestbranding=1`}
+              src={getYouTubeEmbedUrl(selectedMovie)}
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -48,7 +73,7 @@ export default function MovieDetails({
           ) : (
             <div className="relative w-full h-full cursor-pointer group" onClick={() => selectedMovie.tmdb.videoKey && setShowVideo(true)}>
               <img 
-                src={`https://image.tmdb.org/t/p/w780${selectedMovie.tmdb.backdrop_path}`} 
+                src={getTMDBBackdropUrl(selectedMovie)} 
                 className="w-full h-full object-cover opacity-60"
                 alt="backdrop"
               />
@@ -146,17 +171,28 @@ export default function MovieDetails({
 
         {/* footer: buttons */}
         <div className="p-6 pt-3 border-t border-slate-800 bg-slate-900/50 backdrop-blur-sm mt-auto">
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <a 
               href={selectedMovie.trello.url} 
               target="_blank" 
-              className="flex-[2] bg-sky-600 hover:bg-sky-500 text-white text-center py-3 rounded-xl font-bold transition-all shadow-lg shadow-sky-900/20 active:scale-95"
+              rel="noopener noreferrer"
+              className="flex-1 bg-sky-600 hover:bg-sky-500 text-white text-center py-3 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-lg shadow-sky-900/20 active:scale-95 flex items-center justify-center gap-1.5"
             >
-              Abrir en Trello
+              <span>Abrir en Trello</span>
+              <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </a>
+            <a 
+              href={filmAffinityUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex-1 bg-red-700 hover:bg-red-600 text-white text-center py-3 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-lg shadow-red-900/20 active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <span>FilmAffinity</span>
+              <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </a>
             <button 
               onClick={onClose}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-bold transition-all active:scale-95"
+              className="flex-none px-4 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95"
             >
               Cerrar
             </button>

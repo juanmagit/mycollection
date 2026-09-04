@@ -72,6 +72,7 @@ export default function MoviesCollection() {
       {/* configuration section */}
       {activeSection === 'config' && (
         <Configuration
+          movies={movies}
           setMovies={setMovies}
         />
       )}
