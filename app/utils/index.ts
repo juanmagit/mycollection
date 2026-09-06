@@ -1,5 +1,6 @@
 import { SortOption } from "../features/sort";
 import { Filter, Movie } from "../types/types";
+import { TMDB_IMAGE_BASE } from "../config";
 
 export const normalizeText = (text: string) => {
   if (!text) return text;
@@ -92,7 +93,22 @@ export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
       decadeMatch = movie.tmdb.release_date?.decade === parseInt(filter.decade, 10);
     }
 
-    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch && yearMatch && decadeMatch;
+    let runtimeMatch = true;
+    const runtime = movie.tmdb.runtime;
+
+    if (filter.minRuntime !== undefined && filter.minRuntime !== null) {
+      if (isNaN(runtime) || runtime < filter.minRuntime) {
+        runtimeMatch = false;
+      }
+    }
+
+    if (filter.maxRuntime !== undefined && filter.maxRuntime !== null) {
+      if (isNaN(runtime) || runtime > filter.maxRuntime) {
+        runtimeMatch = false;
+      }
+    }
+
+    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch && yearMatch && decadeMatch && runtimeMatch;
   });
 };
 
@@ -145,4 +161,37 @@ export const sortMovies = (movies: Movie[], sort: SortOption): Movie[] => {
   }
 
   return sortedMovies;
+};
+
+/**
+ * Genera una URL de búsqueda a FilmAffinity mediante DuckDuckGo !ducky
+ */
+export const getFilmAffinityUrl = (title: string, year?: string | number): string => {
+  const searchQuery = year
+    ? `!ducky ${title} ${year} site:filmaffinity.com`
+    : `!ducky ${title} site:filmaffinity.com`;
+  return `https://duckduckgo.com/?q=${encodeURIComponent(searchQuery)}`;
+};
+
+/**
+ * Genera la URL de la ficha de una película en TMDB
+ */
+export const getTMDBUrl = (id: string): string => {
+  return `https://www.themoviedb.org/movie/${id}`;
+};
+
+/**
+ * Genera la URL de incrustación de YouTube para el trailer de una película
+ */
+export const getYouTubeEmbedUrl = (videoKey?: string): string => {
+  if (!videoKey) return "";
+  return `https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=0&modestbranding=1`;
+};
+
+/**
+ * Genera la URL de la imagen de fondo (backdrop) de TMDB
+ */
+export const getTMDBBackdropUrl = (backdropPath?: string, size = "w780"): string => {
+  if (!backdropPath) return "";
+  return `${TMDB_IMAGE_BASE}${size}${backdropPath}`;
 };

@@ -23,14 +23,12 @@ export const getMovieData = async (title: string, year?: string): Promise<TMDBMo
     `https://api.themoviedb.org/3/search/movie?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&query=${encodeURIComponent(title)}&language=${ConfigStore.getInstance().getApiConfig().tmdbLanguage}`
   );
   const data = await res.json();
+  const rawMovie = year
+    ? data.results?.find((movie: TMDBMovie) => movie.release_date?.includes(year))
+    : data.results?.[0];
 
-  if (year) {
-    return data.results.find((movie: TMDBMovie) => {
-      return movie.release_date.includes(year);
-    });
-  } else {
-    return data.results[0];
-  }
+  if (!rawMovie) return null as any;
+  return { ...rawMovie, id: String(rawMovie.id) };
 };
 
 export const getMovieDetails = async (id: string): Promise<TMDBMovieDetails> => {
@@ -40,7 +38,7 @@ export const getMovieDetails = async (id: string): Promise<TMDBMovieDetails> => 
   const data = await res.json();
 
   return {
-    runtime: data.runtime,
+    runtime: typeof data.runtime === 'number' ? data.runtime : (parseInt(data.runtime, 10) || 0),
     director: data.credits?.crew?.find((person: any) => person.job === "Director")?.name,
     cast: data.credits?.cast?.slice(0, 5).map((actor: any) => actor.name),
     country_code: data.production_countries?.map(c => c.iso_3166_1) ?? [],
@@ -61,8 +59,11 @@ export const getDiscoverMovies = async (extraQuery: string, page = 1): Promise<{
   const res = await FetchQueue.getInstance().fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${ConfigStore.getInstance().getApiConfig().tmdbApiKey}&language=${ConfigStore.getInstance().getApiConfig().tmdbLanguage}&sort_by=popularity.desc&vote_count.gte=100${extraQuery}&page=${page}`);
   const data = await res.json();
 
+  const rawResults = data.results || [];
+  const results = rawResults.map((movie: any) => ({ ...movie, id: String(movie.id) }));
+
   return {
-    results: data.results || [],
+    results,
     totalPages: data.total_pages || 1
   };
 }

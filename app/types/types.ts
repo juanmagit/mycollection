@@ -41,11 +41,11 @@ export interface TMDBMovie {
   video: boolean;
   vote_average: number;
   vote_count: number;
-  runtime: string;
+  runtime: number;
 }
 
 export interface TMDBMovieDetails {
-  runtime: string;
+  runtime: number;
   director: string;
   cast: string[];
   country_code: string[];
@@ -96,7 +96,7 @@ export interface Movie {
       raw: string;
     };
     videoKey: string;
-    runtime: string;
+    runtime: number;
     director: string;
     cast: string[];
     country_code: string[];
@@ -118,4 +118,6 @@ export interface Filter {
   actor: string;
   year?: string;
   decade?: string;
+  minRuntime?: number | null;
+  maxRuntime?: number | null;
 }

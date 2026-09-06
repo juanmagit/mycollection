@@ -91,7 +91,21 @@ export default function VoiceHelpModal({ isOpen, onClose }: VoiceHelpModalProps)
             </div>
           </div>
 
-          {/* Rule 5: Quality and Watch status */}
+          {/* Rule 5: Duration */}
+          <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 space-y-2">
+            <h4 className="font-bold text-amber-400 flex items-center gap-2 text-sm">
+              <span>⏱️</span> 5. Duración de la Película
+            </h4>
+            <p className="text-slate-400 leading-snug">
+              Puedes indicar rangos o límites de tiempo (*"menos de 90 minutos"*, *"más de 2 horas"*, *"entre 90 y 120 minutos"*).
+            </p>
+            <div className="bg-slate-950/60 p-2.5 rounded-xl font-mono text-amber-300 space-y-1">
+              <div>"Menos de 90 minutos"  •  "Más de 2 horas"</div>
+              <div>"Duración entre 90 y 120 minutos"</div>
+            </div>
+          </div>
+
+          {/* Rule 6: Quality and Watch status */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700/60 space-y-1.5">
               <h4 className="font-bold text-amber-400 flex items-center gap-1.5">
