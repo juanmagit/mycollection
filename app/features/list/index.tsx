@@ -117,6 +117,8 @@ export default function MoviesList({
             genres={moviesSummary.getGenres()}
             directors={moviesSummary.getDirectors()}
             actors={moviesSummary.getActors()}
+            years={moviesSummary.getYears()}
+            decades={moviesSummary.getDecades()}
             onChange={setFilter}
           />
           <SortComponent

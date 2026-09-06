@@ -9,6 +9,27 @@ export const normalizeText = (text: string) => {
     .replace(/[\u0300-\u036f]/g, ""); // remove accented characters
 };
 
+/**
+ * Convierte la fecha string recibida de TMDB API a la estructura numérica del modelo Movie.
+ */
+export const tmdbStringDateToMovieDate = (date: string): Movie['tmdb']['release_date'] => {
+  const rawStr = date ?? '';
+  const [yearStr, monthStr, dayStr] = rawStr.split('-');
+
+  const parsedYear = yearStr && !isNaN(parseInt(yearStr, 10)) ? parseInt(yearStr, 10) : null;
+  const parsedMonth = monthStr && !isNaN(parseInt(monthStr, 10)) ? parseInt(monthStr, 10) : null;
+  const parsedDay = dayStr && !isNaN(parseInt(dayStr, 10)) ? parseInt(dayStr, 10) : null;
+  const parsedDecade = parsedYear ? Math.floor(parsedYear / 10) * 10 : null;
+
+  return {
+    year: parsedYear,
+    month: parsedMonth,
+    day: parsedDay,
+    decade: parsedDecade,
+    raw: rawStr,
+  };
+};
+
 export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
   return movies.filter(movie => {
     if (!filter) return true;
@@ -61,7 +82,17 @@ export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
       );
     }
 
-    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch;
+    let yearMatch = true;
+    if (filter.year) {
+      yearMatch = movie.tmdb.release_date?.year === parseInt(filter.year, 10);
+    }
+
+    let decadeMatch = true;
+    if (filter.decade) {
+      decadeMatch = movie.tmdb.release_date?.decade === parseInt(filter.decade, 10);
+    }
+
+    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch && yearMatch && decadeMatch;
   });
 };
 
@@ -87,17 +118,17 @@ export const sortMovies = (movies: Movie[], sort: SortOption): Movie[] => {
 
     case SortOption.YEAR_ASC:
       sortedMovies.sort((a, b) => {
-        const yearA = a.tmdb.release_date?.year || "";
-        const yearB = b.tmdb.release_date?.year || "";
-        return parseInt(yearA) - parseInt(yearB);
+        const yearA = a.tmdb.release_date?.year || 0;
+        const yearB = b.tmdb.release_date?.year || 0;
+        return yearA - yearB;
       });
       break;
 
     case SortOption.YEAR_DESC:
       sortedMovies.sort((a, b) => {
-        const yearA = a.tmdb.release_date?.year || "";
-        const yearB = b.tmdb.release_date?.year || "";
-        return parseInt(yearB) - parseInt(yearA);
+        const yearA = a.tmdb.release_date?.year || 0;
+        const yearB = b.tmdb.release_date?.year || 0;
+        return yearB - yearA;
       });
       break;
 
