@@ -89,9 +89,11 @@ export interface Movie {
     genres: string[];
     vote_average: number;
     release_date: {
-      year: string;
-      month: string;
-      day: string;
+      year: number | null;
+      month: number | null;
+      day: number | null;
+      decade: number | null;
+      raw: string;
     };
     videoKey: string;
     runtime: string;
@@ -114,4 +116,6 @@ export interface Filter {
   genre: string;
   director: string;
   actor: string;
+  year?: string;
+  decade?: string;
 }

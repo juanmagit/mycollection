@@ -4,6 +4,7 @@ import { Movie, TMDBMovie, ApiConfig, TrelloLabel, TrelloCard } from "../../type
 import { getCards, getListData } from "../../api/trello";
 import { getGenresObject, getMovieData, getMovieDetails, getTrailerKey } from "../../api/tmdb";
 import { ConfigStore } from "./config-store";
+import { tmdbStringDateToMovieDate } from "../../utils";
 
 export interface SyncWarning {
   cardName: string;
@@ -36,15 +37,6 @@ const getTrelloYearWarnings = (trelloCards: TrelloCard[]): SyncWarning[] => {
     }
   }
   return warnings;
-};
-
-const tmdbStringDateToMovieDate = (date: string): Movie['tmdb']['release_date'] => {
-  const [year, month, day] = (date ?? '').split('-');
-  return {
-    year: year ?? '',
-    month: month ?? '',
-    day: day ?? '',
-  }
 };
 
 const extractLocation = (trelloLabels: TrelloLabel[]): {
