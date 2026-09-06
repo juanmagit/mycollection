@@ -7,6 +7,8 @@ export interface ParsedVoiceFilter {
   showCompleted?: boolean | null;
   year?: string;
   decade?: string;
+  minRuntime?: number | null;
+  maxRuntime?: number | null;
 }
 
 /**
@@ -66,6 +68,27 @@ export function parseVoiceInput(
     result.showCompleted = true;
   } else if (/\b(todas?|todos?)\b/i.test(transcript)) {
     result.showCompleted = null;
+  }
+
+  // Runtime / Duration detection
+  const durationBetweenMatch = transcript.match(/(?:duraci[oó]n|entre)\s+(\d+)\s*(?:y|a)\s*(\d+)\s*(?:min|minutos|m)?/i);
+  const durationMoreMatch = transcript.match(/(?:m[aá]s\s+de|m[ií]nimo\s+de)\s+(\d+)\s*(?:min|minutos|m|horas?|h)?/i);
+  const durationLessMatch = transcript.match(/(?:menos\s+de|m[aá]ximo\s+de)\s+(\d+)\s*(?:min|minutos|m|horas?|h)?/i);
+
+  if (durationBetweenMatch && durationBetweenMatch[1] && durationBetweenMatch[2]) {
+    result.minRuntime = parseInt(durationBetweenMatch[1], 10);
+    result.maxRuntime = parseInt(durationBetweenMatch[2], 10);
+  } else {
+    if (durationMoreMatch && durationMoreMatch[1]) {
+      let val = parseInt(durationMoreMatch[1], 10);
+      if (/hora/i.test(durationMoreMatch[0])) val = val * 60;
+      result.minRuntime = val;
+    }
+    if (durationLessMatch && durationLessMatch[1]) {
+      let val = parseInt(durationLessMatch[1], 10);
+      if (/hora/i.test(durationLessMatch[0])) val = val * 60;
+      result.maxRuntime = val;
+    }
   }
 
   // 3. Decade detection

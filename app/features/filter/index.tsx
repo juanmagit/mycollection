@@ -30,6 +30,8 @@ export default function FilterComponent({
   const [selectedActor, setSelectedActor] = useState<string>(null);
   const [selectedYear, setSelectedYear] = useState<string>(null);
   const [selectedDecade, setSelectedDecade] = useState<string>(null);
+  const [minRuntime, setMinRuntime] = useState<number | null>(null);
+  const [maxRuntime, setMaxRuntime] = useState<number | null>(null);
 
   // voice dictation states
   const [isListening, setIsListening] = useState(false);
@@ -70,13 +72,15 @@ export default function FilterComponent({
         actor: selectedActor?.trim(),
         year: selectedYear?.trim(),
         decade: selectedDecade?.trim(),
+        minRuntime,
+        maxRuntime,
       });
     }, 300);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, selectedDirector, selectedActor, selectedYear, selectedDecade, onChange]);
+  }, [qualityFilter, searchTitle, showCompleted, showBroken, selectedGenre, selectedDirector, selectedActor, selectedYear, selectedDecade, minRuntime, maxRuntime, onChange]);
 
   const resetFilter = useCallback(() => {
     setQualityFilter(null);
@@ -88,6 +92,8 @@ export default function FilterComponent({
     setSelectedActor(null);
     setSelectedYear(null);
     setSelectedDecade(null);
+    setMinRuntime(null);
+    setMaxRuntime(null);
     setVoiceTranscript("");
     setVoiceFeedback(null);
   }, []);
@@ -134,6 +140,8 @@ export default function FilterComponent({
         setQualityFilter(parsed.quality || null);
         setSelectedYear(parsed.year || null);
         setSelectedDecade(parsed.decade || null);
+        setMinRuntime(parsed.minRuntime ?? null);
+        setMaxRuntime(parsed.maxRuntime ?? null);
 
         if (parsed.showCompleted !== undefined) {
           setShowCompleted(parsed.showCompleted);
@@ -146,6 +154,7 @@ export default function FilterComponent({
         if (parsed.quality) fieldsUpdated.push("Calidad");
         if (parsed.year) fieldsUpdated.push("Año");
         if (parsed.decade) fieldsUpdated.push("Década");
+        if (parsed.minRuntime || parsed.maxRuntime) fieldsUpdated.push("Duración");
         if (parsed.showCompleted !== undefined) fieldsUpdated.push("Estado");
 
         if (fieldsUpdated.length > 0) {
@@ -174,6 +183,10 @@ export default function FilterComponent({
   // formatted list of standard decades or extracted from catalog
   const availableDecades = decades.length > 0 ? decades : ["2020", "2010", "2000", "1990", "1980", "1970", "1960"];
 
+  const hasActiveFilters = Boolean(
+    qualityFilter || searchTitle || showCompleted !== null || showBroken || selectedGenre || selectedDirector || selectedActor || selectedYear || selectedDecade || minRuntime !== null || maxRuntime !== null
+  );
+
   return (
     <>
       {/* floating buttons container */}
@@ -193,7 +206,7 @@ export default function FilterComponent({
         </button>
 
         {/* clean filter button */}
-        {(qualityFilter || searchTitle || showCompleted !== null || showBroken || selectedGenre || selectedDirector || selectedActor || selectedYear || selectedDecade) && (
+        {hasActiveFilters && (
           <button
             onClick={() => {
               resetFilter();
@@ -211,7 +224,7 @@ export default function FilterComponent({
           className="bg-sky-600 hover:bg-sky-500 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-4 border-slate-950 relative"
         >
           <span className="text-xl">🔍</span>
-          {(qualityFilter || searchTitle || showCompleted !== null || showBroken || selectedGenre || selectedDirector || selectedActor || selectedYear || selectedDecade) && (
+          {hasActiveFilters && (
             <span className="absolute -top-1 -right-1 bg-amber-500 w-5 h-5 rounded-full text-[10px] flex items-center justify-center border-2 border-slate-950 font-bold">!</span>
           )}
         </button>
@@ -340,6 +353,157 @@ export default function FilterComponent({
                 selectedValue={selectedYear}
                 onSelect={(y) => setSelectedYear(y as string)}
               />
+
+              {/* duration / runtime section */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                    Duración (Minutos)
+                  </h4>
+                  {(minRuntime !== null || maxRuntime !== null) && (
+                    <button
+                      onClick={() => {
+                        setMinRuntime(null);
+                        setMaxRuntime(null);
+                      }}
+                      className="text-[10px] text-rose-400 hover:underline font-normal"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+
+                {/* Current selection summary badge */}
+                <div className="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-center shadow-inner mb-4">
+                  <span className="text-xs font-bold text-sky-400">
+                    {minRuntime === null && maxRuntime === null && "Todas las duraciones"}
+                    {minRuntime !== null && maxRuntime === null && `Más de ${minRuntime} min`}
+                    {minRuntime === null && maxRuntime !== null && `Hasta ${maxRuntime} min`}
+                    {minRuntime !== null && maxRuntime !== null && `Entre ${minRuntime} y ${maxRuntime} min`}
+                  </span>
+                </div>
+
+                {/* Dual Range Slider Track */}
+                <div className="relative pt-6 pb-2 px-1 mb-2">
+                  <div className="relative w-full h-2 bg-slate-800 rounded-full">
+                    <div
+                      className="absolute h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full"
+                      style={{
+                        left: `${((minRuntime ?? 0) / 240) * 100}%`,
+                        right: `${100 - ((maxRuntime ?? 240) / 240) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                  {/* Min Range Input */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={240}
+                    step={5}
+                    value={minRuntime ?? 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      const currentMax = maxRuntime ?? 240;
+                      const newMin = Math.min(val, currentMax - 5);
+                      if (newMin === 0 && maxRuntime === null) {
+                        setMinRuntime(null);
+                      } else {
+                        setMinRuntime(newMin === 0 ? null : newMin);
+                      }
+                    }}
+                    className="absolute top-4 left-0 w-full h-2 appearance-none bg-transparent pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-slate-950 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:hover:scale-110 [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-sky-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-slate-950 [&::-moz-range-thumb]:cursor-pointer"
+                    title="Minutos mínimos"
+                  />
+
+                  {/* Max Range Input */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={240}
+                    step={5}
+                    value={maxRuntime ?? 240}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      const currentMin = minRuntime ?? 0;
+                      const newMax = Math.max(val, currentMin + 5);
+                      if (newMax === 240 && minRuntime === null) {
+                        setMaxRuntime(null);
+                      } else {
+                        setMaxRuntime(newMax === 240 ? null : newMax);
+                      }
+                    }}
+                    className="absolute top-4 left-0 w-full h-2 appearance-none bg-transparent pointer-events-none z-30 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-slate-950 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:hover:scale-110 [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-indigo-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-slate-950 [&::-moz-range-thumb]:cursor-pointer"
+                    title="Minutos máximos"
+                  />
+
+                  <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-3 px-1">
+                    <span>0 min</span>
+                    <span>120 min</span>
+                    <span>240+ min</span>
+                  </div>
+                </div>
+
+                {/* Presets */}
+                <div className="grid grid-cols-2 gap-1.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMinRuntime(null);
+                      setMaxRuntime(90);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                      minRuntime === null && maxRuntime === 90
+                        ? "bg-sky-600 border-sky-400 text-white shadow-md"
+                        : "bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    &lt; 90 min (Cortas)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMinRuntime(90);
+                      setMaxRuntime(120);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                      minRuntime === 90 && maxRuntime === 120
+                        ? "bg-sky-600 border-sky-400 text-white shadow-md"
+                        : "bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    90 - 120 min (Media)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMinRuntime(120);
+                      setMaxRuntime(150);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                      minRuntime === 120 && maxRuntime === 150
+                        ? "bg-sky-600 border-sky-400 text-white shadow-md"
+                        : "bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    120 - 150 min (Largas)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMinRuntime(150);
+                      setMaxRuntime(null);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                      minRuntime === 150 && maxRuntime === null
+                        ? "bg-sky-600 border-sky-400 text-white shadow-md"
+                        : "bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    &gt; 150 min (Épicas)
+                  </button>
+                </div>
+              </div>
 
               {/* genre section */}
               <AutocompleteSelector

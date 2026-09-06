@@ -93,7 +93,22 @@ export const filterMovies = (movies: Movie[], filter: Filter): Movie[] => {
       decadeMatch = movie.tmdb.release_date?.decade === parseInt(filter.decade, 10);
     }
 
-    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch && yearMatch && decadeMatch;
+    let runtimeMatch = true;
+    const runtime = movie.tmdb.runtime;
+
+    if (filter.minRuntime !== undefined && filter.minRuntime !== null) {
+      if (isNaN(runtime) || runtime < filter.minRuntime) {
+        runtimeMatch = false;
+      }
+    }
+
+    if (filter.maxRuntime !== undefined && filter.maxRuntime !== null) {
+      if (isNaN(runtime) || runtime > filter.maxRuntime) {
+        runtimeMatch = false;
+      }
+    }
+
+    return qualityMatch && titleMatch && completedMatch && notCompletedMatch && genreMatch && directorMatch && actorMatch && yearMatch && decadeMatch && runtimeMatch;
   });
 };
 

@@ -38,7 +38,7 @@ export const getMovieDetails = async (id: string): Promise<TMDBMovieDetails> => 
   const data = await res.json();
 
   return {
-    runtime: data.runtime,
+    runtime: typeof data.runtime === 'number' ? data.runtime : (parseInt(data.runtime, 10) || 0),
     director: data.credits?.crew?.find((person: any) => person.job === "Director")?.name,
     cast: data.credits?.cast?.slice(0, 5).map((actor: any) => actor.name),
     country_code: data.production_countries?.map(c => c.iso_3166_1) ?? [],
