@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Filter, Movie, TMDBMovie } from "../../types/types";
 import { getDiscoverMovies, getGenres, getPerson } from "../../api/tmdb";
+import { getFilmAffinityUrl, getTMDBUrl } from "../../utils";
 
 type LinkProvider = "tmdb" | "filmaffinity";
 
@@ -34,14 +35,10 @@ export default function Suggestions({
 
   const getMovieUrl = (movie: TMDBMovie, targetProvider: LinkProvider): string => {
     if (targetProvider === "tmdb") {
-      return `https://www.themoviedb.org/movie/${movie.id}`;
+      return getTMDBUrl(movie.id);
     } else {
-      const title = movie.title || "";
-      const year = movie.release_date ? movie.release_date.split("-")[0] : "";
-      const searchQuery = year
-        ? `!ducky ${title} ${year} site:filmaffinity.com`
-        : `!ducky ${title} site:filmaffinity.com`;
-      return `https://duckduckgo.com/?q=${encodeURIComponent(searchQuery)}`;
+      const year = movie.release_date ? movie.release_date.split("-")[0] : undefined;
+      return getFilmAffinityUrl(movie.title || "", year);
     }
   };
 

@@ -4,28 +4,7 @@ import Badge, { BadgeType } from "./badge";
 import CountryFlag from "../countryflag";
 import ShelfLocation from "./shelf-location";
 import { ExternalLink } from "lucide-react";
-import { TMDB_IMAGE_BASE } from "../../config";
-
-export const getFilmAffinityUrl = (movie: Movie): string => {
-  const movieTitle = movie.tmdb.title || movie.trello.title;
-  const movieYear = movie.tmdb.release_date?.year;
-  const searchQuery = movieYear
-    ? `!ducky ${movieTitle} ${movieYear} site:filmaffinity.com`
-    : `!ducky ${movieTitle} site:filmaffinity.com`;
-  return `https://duckduckgo.com/?q=${encodeURIComponent(searchQuery)}`;
-};
-
-export const getYouTubeEmbedUrl = (movie: Movie): string => {
-  const videoKey = movie.tmdb.videoKey;
-  if (!videoKey) return "";
-  return `https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=0&modestbranding=1`;
-};
-
-export const getTMDBBackdropUrl = (movie: Movie, size = "w780"): string => {
-  const backdropPath = movie.tmdb.backdrop_path;
-  if (!backdropPath) return "";
-  return `${TMDB_IMAGE_BASE}${size}${backdropPath}`;
-};
+import { getFilmAffinityUrl, getTMDBBackdropUrl, getYouTubeEmbedUrl } from "../../utils";
 
 export default function MovieDetails({
   selectedMovie,
@@ -36,7 +15,10 @@ export default function MovieDetails({
 }) {
   const [showVideo, setShowVideo] = useState(false);
 
-  const filmAffinityUrl = getFilmAffinityUrl(selectedMovie);
+  const filmAffinityUrl = getFilmAffinityUrl(
+    selectedMovie.tmdb.title || selectedMovie.trello.title,
+    selectedMovie.tmdb.release_date?.year
+  );
 
   useEffect(() => {
     if (!selectedMovie) setShowVideo(false);
@@ -65,7 +47,7 @@ export default function MovieDetails({
           {selectedMovie.tmdb.videoKey && showVideo ? (
             <iframe
               className="w-full h-full animate-in zoom-in-95 duration-300"
-              src={getYouTubeEmbedUrl(selectedMovie)}
+              src={getYouTubeEmbedUrl(selectedMovie.tmdb.videoKey)}
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -73,7 +55,7 @@ export default function MovieDetails({
           ) : (
             <div className="relative w-full h-full cursor-pointer group" onClick={() => selectedMovie.tmdb.videoKey && setShowVideo(true)}>
               <img 
-                src={getTMDBBackdropUrl(selectedMovie)} 
+                src={getTMDBBackdropUrl(selectedMovie.tmdb.backdrop_path)} 
                 className="w-full h-full object-cover opacity-60"
                 alt="backdrop"
               />
